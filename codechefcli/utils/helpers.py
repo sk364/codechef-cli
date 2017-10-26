@@ -1,5 +1,8 @@
 import requests
-from http.cookiejar import LWPCookieJar
+try:
+    from http.cookiejar import LWPCookieJar
+except ImportError:
+    from cookielib import LWPCookieJar
 
 from .constants import COOKIES_FILE_PATH
 

@@ -1,7 +1,10 @@
 import os
 
 from functools import wraps
-from http.cookiejar import LWPCookieJar
+try:
+    from http.cookiejar import LWPCookieJar
+except ImportError:
+    from cookielib import LWPCookieJar
 
 from .utils.constants import COOKIES_FILE_PATH
 

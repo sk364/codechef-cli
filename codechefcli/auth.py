@@ -1,7 +1,10 @@
 import os
 import requests
 
-from http.cookiejar import LWPCookieJar
+try:
+    from http.cookiejar import LWPCookieJar
+except ImportError:
+    from cookielib import LWPCookieJar
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
