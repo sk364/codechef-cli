@@ -1,6 +1,7 @@
 # CodeChef CLI
 
 A command-line interface for CodeChef powered with Python3.6  
+CodeChefCLI helps competitive coders to view, submit, comment on problems in CodeChef.  
 
 
 # Features
@@ -14,10 +15,10 @@ A command-line interface for CodeChef powered with Python3.6
 
 # Installation
 
-> pip install -r requirements.txt
+> python setup.py install
 
 
 # Usage
 
 To see full list of options:  
-> python3.6 -m codechefcli [--help/-h]
+> codechefcli --help
