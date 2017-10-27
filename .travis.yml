@@ -1,0 +1,18 @@
+language: python
+sudo: required
+python:
+- '2.6'
+- '2.7'
+- '3.2'
+- '3.3'
+- '3.4'
+- '3.5'
+- nightly
+install: true
+script:
+- sudo python setup.py sdist
+- sudo python setup.py install
+- codechefcli
+- codechefcli --login < userpass.txt
+- codechefcli --login abcd < pass.txt
+- codechefcli --logout
