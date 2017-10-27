@@ -13,10 +13,11 @@ except NameError:
 
 def prompt(action, *args, **kwargs):
     if action == 'login':
-        if not kwargs['username']:
+        if not kwargs.get('username', None):
             username = input('Username: ')
         else:
             username = kwargs['username']
+
         password = getpass()
         login(username, password)
 
