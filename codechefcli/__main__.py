@@ -5,6 +5,12 @@ from getpass import getpass
 from .auth import login, logout, get_other_active_sessions
 
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
+
 def prompt(action, *args, **kwargs):
     if action == 'login':
         if not kwargs['username']:
@@ -21,7 +27,7 @@ def parse_args():
     parser.add_argument('--logout', required=False, action='store_true')
     if len(sys.argv) == 1:
         parser.print_help()
-        exit(1)
+        exit(0)
 
     return vars(parser.parse_args())
 
@@ -42,9 +48,5 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        input = raw_input
-    except NameError:
-        pass
     main()
 
