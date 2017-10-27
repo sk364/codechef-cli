@@ -6,8 +6,8 @@ except ImportError:
 from codecs import open
 from sys import exit,version
 import sys
-if version < '3.0.0':
-    print("Python 1 and 2 not supported...")
+if version < '2.0.0':
+    print("Python 1 not supported...")
     sys.exit(1)
 
 with open('README.md') as f:
