@@ -42,5 +42,9 @@ def main():
 
 
 if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
     main()
 
