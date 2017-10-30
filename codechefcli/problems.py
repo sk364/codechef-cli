@@ -21,9 +21,7 @@ def get_description(problem_code):
             problem_info = soup.find_all('table')[2].text
             return content.text + problem_info
         else:
-            print ('Problem not found')
-            return ''
+            return 'Problem not found'
     else:
-        print (SERVER_DOWN_MSG)
-        return ''
+        return SERVER_DOWN_MSG
 
