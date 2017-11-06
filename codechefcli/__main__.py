@@ -3,7 +3,7 @@ import sys
 from getpass import getpass
 
 from .auth import login, logout, get_other_active_sessions
-from .problems import get_description
+from .problems import get_description, submit_problem
 from .users import get_user
 
 
@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--logout', required=False, action='store_true')
     parser.add_argument('--problem', '-p', required=False)
     parser.add_argument('--user', '-u', required=False, metavar='username')
+    parser.add_argument('--submit', nargs=3, required=False, metavar=('<problem code>', '<solution file path>', '<language>'))
     if len(sys.argv) == 1:
         parser.print_help()
         exit(0)
@@ -44,6 +45,7 @@ def main():
     is_logout = args['logout']
     problem_code = args['problem']
     search_username = args['user']
+    submit = args['submit']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -58,6 +60,9 @@ def main():
 
     elif search_username:
         print (get_user(search_username))
+
+    elif submit:
+        submit_problem(*submit)
 
 if __name__ == '__main__':
     main()

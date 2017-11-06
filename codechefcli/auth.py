@@ -12,6 +12,12 @@ from .utils.constants import BASE_URL, SERVER_DOWN_MSG, COOKIES_FILE_PATH
 from .utils.helpers import get_session
 
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
+
 def get_other_active_sessions(session_limit_html):
     """
     :desc: Retrieves disconnect session form action and inputs from webpage.
