@@ -12,6 +12,7 @@ from .utils.constants import BASE_URL, SERVER_DOWN_MSG, COOKIES_FILE_PATH
 from .utils.helpers import get_session
 
 
+# Supporting input in Python 2/3
 try:
     input = raw_input
 except NameError:
@@ -22,7 +23,7 @@ def get_other_active_sessions(session_limit_html):
     """
     :desc: Retrieves disconnect session form action and inputs from webpage.
     :param: `session_limit_html` HTML code containing form.
-    :return: tuple containing action and a dictionary of form input names and values.
+    :return: (form action url, dictionary form inputs dict)
     """
 
     soup = BeautifulSoup(session_limit_html, 'html.parser')
@@ -80,6 +81,12 @@ def login(username, password):
 
 @login_required
 def logout(session=None):
+    """
+    :desc: Logout a user. Delete the cookies.
+    :param: `session` Existing session to logout from.
+    :return: None
+    """
+
     session = session or get_session()
     req_obj = session.get(BASE_URL + '/logout')
     if req_obj.status_code == 200:

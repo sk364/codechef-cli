@@ -8,10 +8,14 @@ except ImportError:
 from bs4 import BeautifulSoup
 
 from .constants import COOKIES_FILE_PATH
+from ..decorators import login_required
 
 
+@login_required
 def get_session():
     """
+    :desc: Builds session from the saved cookies
+    :return: requests.Session object
     """
 
     session = requests.Session()
@@ -22,6 +26,9 @@ def get_session():
 
 def print_table(table_html):
     """
+    :desc: Prints data in tabular format.
+    :param: `table_html` HTML text containing <table> tag.
+    :return: None
     """
 
     if not table_html:

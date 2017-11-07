@@ -5,6 +5,12 @@ from .utils.constants import BASE_URL, SERVER_DOWN_MSG
 
 
 def get_user(username):
+    """
+    :desc: Retrieves user information.
+    :param: `username` Username of the user.
+    :return: User information / User not found  / Server Down
+    """
+
     req_obj = requests.get(BASE_URL + '/users/' + username)
 
     if req_obj.status_code == 200:

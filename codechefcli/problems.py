@@ -8,7 +8,9 @@ from .utils.helpers import get_session, print_table
 
 def get_description(problem_code):
     """
-    
+    :desc: Retrieves a particular problem description.
+    :param: `problem_code` Code of the problem.
+    :return: `str` [description / Not Found / Server down]
     """
 
     req_obj = requests.get(BASE_URL + '/problems/' + problem_code)
@@ -30,6 +32,9 @@ def get_description(problem_code):
 
 def get_form_token(problem_submit_html):
     """
+    :desc: Retrieves problem submission form token.
+    :param: `problem_submit_html` HTML text containing problem submission form.
+    :return: `str` form token value
     """
 
     soup = BeautifulSoup(problem_submit_html, 'html.parser')
@@ -39,6 +44,9 @@ def get_form_token(problem_submit_html):
 
 def get_error_table(status_code):
     """
+    :desc: Retrieves error status table.
+    :param: `status_code` Status code of the submitted problem.
+    :return: `str` error status table
     """
 
     session = get_session()
@@ -51,6 +59,9 @@ def get_error_table(status_code):
 
 def get_compilation_error(status_code):
     """
+    :desc: Retrieves compilation error text.
+    :param: `status_code` Status code of the submitted problem.
+    :return: `str` Compilation error text.
     """
 
     session = get_session()
@@ -65,6 +76,10 @@ def get_compilation_error(status_code):
 
 def get_language_code(problem_submit_html, language):
     """
+    :desc: Retrieves language code.
+    :param: `problem_submit_html` HTML text containing problem submission form.
+            `language` Language Name (eg. Python3, C++, etc.)
+    :return: `str` Language code.
     """
 
     soup = BeautifulSoup(problem_submit_html, 'html.parser')
@@ -80,6 +95,11 @@ def get_language_code(problem_submit_html, language):
 @login_required
 def submit_problem(problem_code, solution_file, language):
     """
+    :desc: Submits the problem.
+    :param: `problem_code` Code of the problem.
+            `solution_file` Path of the solution file.
+            `language` Language Name (eg. Python3, C++, etc.)
+    :return: None
     """
 
     session = get_session()
