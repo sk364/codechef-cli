@@ -10,7 +10,7 @@ CodeChefCLI helps competitive coders to view, submit, comment on problems in Cod
 * Get Problem Description
 * Get User Information
 * Submit Problems
-* Commenting on Problems
+* Search Problems
 
 
 # Installation
