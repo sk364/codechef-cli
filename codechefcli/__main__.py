@@ -3,7 +3,7 @@ import sys
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import get_description, submit_problem
+from .problems import get_description, submit_problem, search_problems
 from .users import get_user
 
 
@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument('--user', '-u', required=False, metavar='username')
     parser.add_argument('--submit', nargs=3, required=False, metavar=('<Problem Code>', '<Solution File Path>', '<Language>'),
                         help='Language is case-insensitive. Few examples: C++, C, Python, Python3, java, etc.')
+    parser.add_argument('--search', required=False, metavar='<Contest Code>', help='Contest code examples - OCT17, COOK88')
     if len(sys.argv) == 1:
         parser.print_help()
         exit(0)
@@ -63,6 +64,7 @@ def main():
     problem_code = args['problem']
     search_username = args['user']
     submit = args['submit']
+    contest_code = args['search']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -80,6 +82,9 @@ def main():
 
     elif submit:
         submit_problem(*submit)
+
+    elif contest_code:
+        search_problems(contest_code)
 
 
 if __name__ == '__main__':

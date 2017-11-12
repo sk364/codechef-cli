@@ -1,4 +1,3 @@
-import requests
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
@@ -13,7 +12,8 @@ def get_description(problem_code):
     :return: `str` [description / Not Found / Server down]
     """
 
-    req_obj = requests.get(BASE_URL + '/problems/' + problem_code)
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/problems/' + problem_code)
 
     if req_obj.status_code == 200:
         problem_html = req_obj.text
@@ -152,6 +152,25 @@ def submit_problem(problem_code, solution_file, language):
 
                 print_table(get_error_table(status_code))
                 break
+    else:
+        print (SERVER_DOWN_MSG)
+
+
+def search_problems(contest_code):
+    """
+    :desc: Retrieves contest problems.
+    :param: `contest_code` Code of the contest. (Eg, OCT17, COOK88)
+    :return: None
+    """
+
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/' + contest_code)
+
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        table_html = str(soup.find_all('table')[1])
+
+        print_table(table_html)
     else:
         print (SERVER_DOWN_MSG)
 

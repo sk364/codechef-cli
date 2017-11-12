@@ -1,7 +1,7 @@
-import requests
 from bs4 import BeautifulSoup
 
 from .utils.constants import BASE_URL, SERVER_DOWN_MSG
+from .utils.helpers import get_session
 
 
 def get_user(username):
@@ -11,7 +11,8 @@ def get_user(username):
     :return: User information / User not found  / Server Down
     """
 
-    req_obj = requests.get(BASE_URL + '/users/' + username)
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/users/' + username)
 
     if req_obj.status_code == 200:
         if 'Team handle' in req_obj.text:
