@@ -1,3 +1,4 @@
+import os
 import requests
 
 try:
@@ -11,7 +12,6 @@ from .constants import COOKIES_FILE_PATH
 from ..decorators import login_required
 
 
-@login_required
 def get_session():
     """
     :desc: Builds session from the saved cookies
@@ -19,8 +19,11 @@ def get_session():
     """
 
     session = requests.Session()
-    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
-    session.cookies.load(ignore_discard=True, ignore_expires=True)
+
+    if os.path.exists(COOKIES_FILE_PATH):
+        session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
+        session.cookies.load(ignore_discard=True, ignore_expires=True)
+
     return session
 
 

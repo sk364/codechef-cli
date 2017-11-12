@@ -1,4 +1,3 @@
-import requests
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
@@ -13,7 +12,8 @@ def get_description(problem_code):
     :return: `str` [description / Not Found / Server down]
     """
 
-    req_obj = requests.get(BASE_URL + '/problems/' + problem_code)
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/problems/' + problem_code)
 
     if req_obj.status_code == 200:
         problem_html = req_obj.text
