@@ -36,17 +36,22 @@ def print_table(table_html):
 
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
-    headings = '   '.join([row.text for row in rows[0].find_all('th')])
-    data_rows = [[data.text for data in row.find_all('td')] for row in rows[1:]]
+    th_tags = rows[0].find_all('th')
+    num_cols = len(th_tags)
+    max_len_in_cols = [0] * num_cols
+    headings = [[row.text for row in th_tags]]
+    data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
 
-    spaces = [(len(heading) + 3) * ' ' for heading in headings]
+    for row in data_rows:
+        for index, val in enumerate(row):
+            if len(val) > max_len_in_cols[index]:
+                max_len_in_cols[index] = len(val)
 
     data_str = ''
     for row in data_rows:
         for index, val in enumerate(row):
-            data_str += val + spaces[index]
+            data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
 
-    print (headings + '\n')
     print (data_str)
 
