@@ -155,3 +155,22 @@ def submit_problem(problem_code, solution_file, language):
     else:
         print (SERVER_DOWN_MSG)
 
+
+def search_problems(contest_code):
+    """
+    :desc: Retrieves contest problems.
+    :param: `contest_code` Code of the contest. (Eg, OCT17, COOK88)
+    :return: None
+    """
+
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/' + contest_code)
+
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        table_html = str(soup.find_all('table')[1])
+
+        print_table(table_html)
+    else:
+        print (SERVER_DOWN_MSG)
+
