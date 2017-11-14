@@ -1,12 +1,12 @@
 import os
-
 from functools import wraps
+
+from .utils.constants import COOKIES_FILE_PATH
+
 try:
     from http.cookiejar import LWPCookieJar
 except ImportError:
     from cookielib import LWPCookieJar
-
-from .utils.constants import COOKIES_FILE_PATH
 
 
 def login_required(func):
@@ -27,10 +27,9 @@ def login_required(func):
                 os.remove(COOKIES_FILE_PATH)
 
         if not is_login:
-            print ('You are not logged in.')
-            return 
+            print('You are not logged in.')
+            return None
         else:
             return func(*args, **kwargs)
 
     return wrapper
-

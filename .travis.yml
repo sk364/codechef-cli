@@ -6,6 +6,6 @@ python:
 - '3.6'
 install: true
 script:
-- sudo python setup.py install
-- codechefcli
-- codechefcli --logout
+- pip install -r requirements.txt
+- flake8 . --max-line-length=100 --exclude=tests.py
+- isort

@@ -109,13 +109,13 @@ def submit_problem(problem_code, solution_file, language):
         form_token = get_form_token(req_obj.text)
         language_code = get_language_code(req_obj.text, language)
     else:
-        print (SERVER_DOWN_MSG)
+        print(SERVER_DOWN_MSG)
         return
 
     try:
         solution_file_obj = open(solution_file)
     except IOError:
-        print ('Solution file not found. Please provide a valid path.')
+        print('Solution file not found. Please provide a valid path.')
 
     post_data = {
         'language': language_code,
@@ -123,12 +123,12 @@ def submit_problem(problem_code, solution_file, language):
         'form_id': 'problem_submission',
         'form_token': form_token,
     }
-    post_files = { 'files[sourcefile]': solution_file_obj }
+    post_files = {'files[sourcefile]': solution_file_obj}
 
     req_obj = session.post(BASE_URL + '/submit/' + problem_code, data=post_data, files=post_files)
     if req_obj.status_code == 200:
-        print ('Problem Submitted...')
-        print ('Running code...\n')
+        print('Problem Submitted...')
+        print('Running code...\n')
 
         status_code = req_obj.url.split('/')[-1]
 
@@ -142,18 +142,18 @@ def submit_problem(problem_code, solution_file, language):
 
             if result_code != 'wait':
                 if result_code == 'compile':
-                    print (u'Compilation error.\n{0}'.format(get_compilation_error(status_code)))
+                    print(u'Compilation error.\n{0}'.format(get_compilation_error(status_code)))
                 elif result_code == 'runtime':
-                    print (u'Runtime error. {0}\n'.format(status_json['signal']))
+                    print(u'Runtime error. {0}\n'.format(status_json['signal']))
                 elif result_code == 'wrong':
-                    print ('Wrong answer\n')
+                    print('Wrong answer\n')
                 elif result_code == 'accepted':
-                    print ('Correct answer\n')
+                    print('Correct answer\n')
 
                 print_table(get_error_table(status_code))
                 break
     else:
-        print (SERVER_DOWN_MSG)
+        print(SERVER_DOWN_MSG)
 
 
 def search_problems(contest_code):
@@ -172,5 +172,4 @@ def search_problems(contest_code):
 
         print_table(table_html)
     else:
-        print (SERVER_DOWN_MSG)
-
+        print(SERVER_DOWN_MSG)

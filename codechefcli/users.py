@@ -24,15 +24,14 @@ def get_user(username):
         user_details = '\n' + header + '\n\n' + soup.find(class_='user-details').text.strip()
         rating = soup.find(class_='rating-number').text
         ranks = soup.find(class_='rating-ranks').find('ul').find_all('li')
-       
+
         user_details += ' - ' + BASE_URL + '/users/' + username + '/teams/\n\n'
         user_details += 'Rating: ' + rating + '\n\n'
         user_details += 'Global Rank: ' + ranks[0].text.split()[0] + '\n'
         user_details += 'Country Rank: ' + ranks[1].text.split()[0] + '\n\n'
-        
+
         return user_details
     elif req_obj.status_code == 404:
         return 'User not found.'
     else:
         return SERVER_DOWN_MSG
-

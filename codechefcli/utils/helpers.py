@@ -1,15 +1,14 @@
 import os
+
 import requests
+from bs4 import BeautifulSoup
+
+from .constants import COOKIES_FILE_PATH
 
 try:
     from http.cookiejar import LWPCookieJar
 except ImportError:
     from cookielib import LWPCookieJar
-
-from bs4 import BeautifulSoup
-
-from .constants import COOKIES_FILE_PATH
-from ..decorators import login_required
 
 
 def get_session():
@@ -56,5 +55,4 @@ def print_table(table_html):
             data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
 
-    print (data_str)
-
+    print(data_str)
