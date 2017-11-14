@@ -3,9 +3,8 @@ import sys
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import get_description, submit_problem, search_problems
+from .problems import get_description, search_problems, submit_problem
 from .users import get_user
-
 
 # Supporting input in Python 2/3
 try:
@@ -38,13 +37,17 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username', default='##no_login##')
+    parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
+                        default='##no_login##')
     parser.add_argument('--logout', required=False, action='store_true')
     parser.add_argument('--problem', '-p', required=False, metavar='<Problem Code>')
     parser.add_argument('--user', '-u', required=False, metavar='username')
-    parser.add_argument('--submit', nargs=3, required=False, metavar=('<Problem Code>', '<Solution File Path>', '<Language>'),
-                        help='Language is case-insensitive. Few examples: C++, C, Python, Python3, java, etc.')
-    parser.add_argument('--search', required=False, metavar='<Contest Code>', help='Contest code examples - OCT17, COOK88')
+    parser.add_argument('--submit', nargs=3, required=False,
+                        metavar=('<Problem Code>', '<Solution File Path>', '<Language>'),
+                        help='Language is case-insensitive. \
+                              Few examples: C++, C, Python, Python3, java, etc.')
+    parser.add_argument('--search', required=False, metavar='<Contest Code>',
+                        help='Contest code examples - OCT17, COOK88')
     if len(sys.argv) == 1:
         parser.print_help()
         exit(0)
@@ -75,10 +78,10 @@ def main():
         exit(0)
 
     elif problem_code:
-        print (get_description(problem_code))
+        print(get_description(problem_code))
 
     elif search_username:
-        print (get_user(search_username))
+        print(get_user(search_username))
 
     elif submit:
         submit_problem(*submit)
@@ -89,4 +92,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
