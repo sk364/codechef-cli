@@ -2,7 +2,6 @@ beautifulsoup4==4.6.0
 bs4==0.0.1
 certifi==2017.7.27.1
 chardet==3.0.4
-codechefcli==0.1
 flake8==3.5.0
 idna==2.6
 isort==4.2.15
