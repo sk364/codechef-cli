@@ -1,0 +1,2 @@
+recursive-include codechefcli *
+include LICENSE README.rst requirements.txt
