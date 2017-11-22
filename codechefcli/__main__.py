@@ -1,5 +1,5 @@
 import argparse
-import sys
+
 from getpass import getpass
 
 from .auth import login, logout
@@ -30,7 +30,7 @@ def prompt(action, *args, **kwargs):
         login(username, password)
 
 
-def parse_args():
+def create_parser():
     """
     :desc: Parses arguments from command line
     :return: (parser object, arguments dict)
@@ -48,11 +48,7 @@ def parse_args():
                               Few examples: C++, C, Python, Python3, java, etc.')
     parser.add_argument('--search', required=False, metavar='<Contest Code>',
                         help='Contest code examples - OCT17, COOK88')
-    if len(sys.argv) == 1:
-        parser.print_help()
-        exit(0)
-
-    return parser, vars(parser.parse_args())
+    return parser
 
 
 def main():
@@ -60,7 +56,8 @@ def main():
     :desc: Entry point method
     """
 
-    parser, args = parse_args()
+    parser = create_parser()
+    args = vars(parser.parse_args())
 
     username = args['login']
     is_logout = args['logout']
@@ -88,6 +85,9 @@ def main():
 
     elif contest_code:
         search_problems(contest_code)
+
+    else:
+        parser.print_help()
 
 
 if __name__ == '__main__':
