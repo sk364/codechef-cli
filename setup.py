@@ -10,7 +10,7 @@ if sys.version < '2.0.0':
     print("Python 1 not supported...")
     sys.exit(1)
 
-with open('README.md') as f:
+with open('README.srt') as f:
     longd = f.read()
 
 setup(
