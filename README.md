@@ -15,7 +15,7 @@ CodeChefCLI helps competitive coders to view, search and submit problems in Code
 
 # Installation
 
-> python setup.py install
+> pip install codechefcli
 
 
 # Usage

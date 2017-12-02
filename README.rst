@@ -17,7 +17,7 @@ Features
 Installation
 ============
 
-    python setup.py install
+    pip install codechefcli
 
 Usage
 =====
