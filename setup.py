@@ -10,7 +10,7 @@ if sys.version < '2.0.0':
     print("Python 1 not supported...")
     sys.exit(1)
 
-with open('README.md') as f:
+with open('README.rst') as f:
     longd = f.read()
 
 setup(
@@ -20,10 +20,11 @@ setup(
     data_files=[('codechefcli', []), ('codechefcli.utils', [])],
     entry_points={"console_scripts": ['codechefcli = codechefcli.__main__:main']},
     install_requires=['BeautifulSoup4', 'requests'],
+    python_requires='>=2.7',
     requires=['BeautifulSoup4', 'requests'],
     version='0.1',
     url='http://www.github.com/sk364/codechefcli',
-    keywords="codechef cli",
+    keywords="codechefcli codechef cli programming",
     license='GNU',
     author='Sachin Kukreja',
     author_email='skad5455@gmail.com',
