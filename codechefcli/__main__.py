@@ -1,5 +1,4 @@
 import argparse
-
 from getpass import getpass
 
 from .auth import login, logout
