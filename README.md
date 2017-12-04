@@ -1,4 +1,4 @@
-# CodeChef CLI
+# CodeChef CLI [![PyPI version](https://badge.fury.io/py/codechefcli.svg)](https://badge.fury.io/py/codechefcli.svg) [![Build Status](https://api.travis-ci.org/sk364/codechef-cli.svg?branch=master)](https://api.travis-ci.org/sk364/codechef-cli.svg?branch=master)
 
 A command-line interface for CodeChef powered with Python3.6  
 CodeChefCLI helps competitive coders to view, submit, comment on problems in CodeChef.  
