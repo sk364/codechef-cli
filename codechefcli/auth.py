@@ -1,22 +1,30 @@
 import os
+
 import requests
+from bs4 import BeautifulSoup
+
+from .decorators import login_required
+from .utils.constants import BASE_URL, COOKIES_FILE_PATH, SERVER_DOWN_MSG
+from .utils.helpers import get_session
 
 try:
     from http.cookiejar import LWPCookieJar
 except ImportError:
     from cookielib import LWPCookieJar
-from bs4 import BeautifulSoup
 
-from .decorators import login_required
-from .utils.constants import BASE_URL, SERVER_DOWN_MSG, COOKIES_FILE_PATH
-from .utils.helpers import get_session
+
+# Supporting input in Python 2/3
+try:
+    input = raw_input
+except NameError:
+    pass
 
 
 def get_other_active_sessions(session_limit_html):
     """
     :desc: Retrieves disconnect session form action and inputs from webpage.
     :param: `session_limit_html` HTML code containing form.
-    :return: tuple containing action and a dictionary of form input names and values.
+    :return: (form action url, dictionary form inputs dict)
     """
 
     soup = BeautifulSoup(session_limit_html, 'html.parser')
@@ -24,7 +32,7 @@ def get_other_active_sessions(session_limit_html):
     action = form['action']
     inputs = form.find_all('input')
     inputs = inputs[:-5] + inputs[len(inputs[:-4]):]
-    return (action, {inp['name'] : inp['value'] for inp in inputs})
+    return (action, {inp['name']: inp['value'] for inp in inputs})
 
 
 def login(username, password):
@@ -44,43 +52,51 @@ def login(username, password):
 
             if req_obj.status_code == 200:
                 if 'Session limit exceeded' in req_obj.text:
-                    print ('Session limit exceeded!')
-                    proceed = input('You need to disconnect other sessions to continue. Do you want to disconnect other sessions? [Y/n] ')
+                    print('Session limit exceeded!')
+                    proceed = input('You need to disconnect other sessions to continue.\
+                                     Do you want to disconnect other sessions? [Y/n] ')
                     if proceed == 'Y' or proceed == '' or proceed == 'y':
                         action, other_active_sessions = get_other_active_sessions(req_obj.text)
-                        disconnect_req_obj = session.post(BASE_URL + action, data=other_active_sessions)
+                        disconnect_url = BASE_URL + action
+                        disconnect_req_obj = session.post(disconnect_url,
+                                                          data=other_active_sessions)
 
                         if disconnect_req_obj.status_code == 200:
-                            print ('Disconnected other sessions.\nSuccessfully logged in.')
+                            print('Disconnected other sessions.\nSuccessfully logged in.')
                             save_cookies = True
                         else:
-                            print (SERVER_DOWN_MSG)
+                            print(SERVER_DOWN_MSG)
                     else:
                         logout(session=session)
                 elif 'Logout' in req_obj.text:
-                    print ('Successfully logged in!')
+                    print('Successfully logged in!')
                     save_cookies = True
                 else:
-                    print ('Incorrect Credentials!')
+                    print('Incorrect Credentials!')
 
                 if save_cookies:
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
                     session.cookies.save(ignore_expires=True, ignore_discard=True)
             else:
-                print (SERVER_DOWN_MSG)
+                print(SERVER_DOWN_MSG)
     else:
-        print ('Username/Password field left blank. Please try again!')
+        print('Username/Password field left blank. Please try again!')
 
 
 @login_required
 def logout(session=None):
+    """
+    :desc: Logout a user. Delete the cookies.
+    :param: `session` Existing session to logout from.
+    :return: None
+    """
+
     session = session or get_session()
     req_obj = session.get(BASE_URL + '/logout')
     if req_obj.status_code == 200:
-        print ('Successfully logged out.')
+        print('Successfully logged out.')
 
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
     else:
-        print (SERVER_DOWN_MSG)
-
+        print(SERVER_DOWN_MSG)
