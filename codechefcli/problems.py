@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 
 from .decorators import login_required
 from .utils.constants import BASE_URL, SERVER_DOWN_MSG
-from .utils.helpers import get_session, print_table
+from .utils.helpers import bold, get_session, print_table
 
 
 def get_description(problem_code):
@@ -171,5 +171,25 @@ def search_problems(contest_code):
         table_html = str(soup.find_all('table')[1])
 
         print_table(table_html)
+    else:
+        print(SERVER_DOWN_MSG)
+
+
+def get_contests():
+    """
+    :desc: Retrieves contests.
+    """
+
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/contests')
+
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        tables = soup.find_all('table')
+        labels = ['Present', 'Future', 'Past']
+
+        for i in range(1, 4):
+            print(bold(labels[i-1] + ' Contests:\n'))
+            print_table(str(tables[i]))
     else:
         print(SERVER_DOWN_MSG)
