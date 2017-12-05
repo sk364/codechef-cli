@@ -2,7 +2,8 @@ import argparse
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import get_description, search_problems, submit_problem, get_contests
+from .problems import (get_contests, get_description, search_problems,
+                       submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3

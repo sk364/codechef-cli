@@ -28,7 +28,7 @@ def get_session():
 
 
 def more(filename='.tmp.codechefcli.tbl'):
-    subprocess.call(['cat ' + filename  + ' | more'], shell=True)
+    subprocess.call(['cat ' + filename + ' | more'], shell=True)
 
 
 def print_table(table_html):
