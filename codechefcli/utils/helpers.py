@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import requests
 from bs4 import BeautifulSoup
@@ -26,6 +27,10 @@ def get_session():
     return session
 
 
+def more(filename='.tmp.codechefcli.tbl'):
+    subprocess.call(['cat ' + filename  + ' | more'], shell=True)
+
+
 def print_table(table_html):
     """
     :desc: Prints data in tabular format.
@@ -41,7 +46,7 @@ def print_table(table_html):
     th_tags = rows[0].find_all('th')
     num_cols = len(th_tags)
     max_len_in_cols = [0] * num_cols
-    headings = [[row.text for row in th_tags]]
+    headings = [[row.text.strip() for row in th_tags]]
     data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
 
     for row in data_rows:
@@ -55,4 +60,21 @@ def print_table(table_html):
             data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
 
-    print(data_str)
+    filename = '.tmp.codechefcli.tbl'
+    with open(filename, 'w') as f:
+        f.write(data_str)
+
+    more(filename=filename)
+
+    if os.path.exists(filename):
+        os.remove(filename)
+
+
+def bold(text):
+    """
+    :desc: Bold the text by transforming text with ascii codes.
+    :param: `text` Text to format.
+    :return: `str` Text with ascii codes.
+    """
+
+    return '{0}{1}{2}'.format('\033[1m', text, '\033[0m')

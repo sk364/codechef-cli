@@ -2,7 +2,7 @@ import argparse
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import get_description, search_problems, submit_problem
+from .problems import get_description, search_problems, submit_problem, get_contests
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -47,6 +47,8 @@ def create_parser():
                               Few examples: C++, C, Python, Python3, java, etc.')
     parser.add_argument('--search', required=False, metavar='<Contest Code>',
                         help='Contest code examples - OCT17, COOK88')
+    parser.add_argument('--contests', required=False, action='store_true',
+                        help='Get All Contests')
     return parser
 
 
@@ -64,6 +66,7 @@ def main():
     search_username = args['user']
     submit = args['submit']
     contest_code = args['search']
+    contests = args['contests']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -84,6 +87,9 @@ def main():
 
     elif contest_code:
         search_problems(contest_code)
+
+    elif contests:
+        get_contests()
 
     else:
         parser.print_help()
