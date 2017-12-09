@@ -193,3 +193,32 @@ def get_contests():
             print_table(str(tables[i]))
     else:
         print(SERVER_DOWN_MSG)
+
+
+def get_solutions(problem_code, page):
+    """
+    :desc: Retrieves solutions list of a problem.
+    :param: `problem_code` Code of the problem.
+            `page` Page Number
+    """
+
+    session = get_session()
+
+    params = {'page': page - 1} if page != 1 else {}
+    req_obj = session.get(BASE_URL + '/status/' + problem_code, params=params)
+
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        solution_table = soup.find_all('table')[2]
+
+        rows = solution_table.find_all('tr')
+        headings = rows[0].find_all('th')
+        last_heading = headings[-1].extract()
+
+        for row in rows[1:]:
+            cols = row.find_all('td')
+            last_col = cols[-1].extract()
+
+        print_table(str(solution_table))
+    else:
+        print(SERVER_DOWN_MSG)

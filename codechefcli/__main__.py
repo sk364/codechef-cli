@@ -2,8 +2,8 @@ import argparse
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import (get_contests, get_description, search_problems,
-                       submit_problem)
+from .problems import (get_contests, get_description, get_solutions,
+                       search_problems, submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -40,7 +40,7 @@ def create_parser():
     parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
                         default='##no_login##')
     parser.add_argument('--logout', required=False, action='store_true')
-    parser.add_argument('--problem', '-p', required=False, metavar='<Problem Code>')
+    parser.add_argument('--problem', required=False, metavar='<Problem Code>')
     parser.add_argument('--user', '-u', required=False, metavar='username')
     parser.add_argument('--submit', nargs=3, required=False,
                         metavar=('<Problem Code>', '<Solution File Path>', '<Language>'),
@@ -50,6 +50,11 @@ def create_parser():
                         help='Contest code examples - OCT17, COOK88')
     parser.add_argument('--contests', required=False, action='store_true',
                         help='Get All Contests')
+    parser.add_argument('--page', '-p', required=False, metavar='<Page Number>',
+                        default=1, type=int, help='Gets specific page. Default: 1')
+    parser.add_argument('--solutions', required=False, metavar='<Problem Code>',
+                        help='Prints solutions list for a problem')
+    parser.add_argument('--solution', required=False, metavar='<Solution Code>')
     return parser
 
 
@@ -68,6 +73,8 @@ def main():
     submit = args['submit']
     contest_code = args['search']
     contests = args['contests']
+    page = args['page']
+    solution_list_problem_code = args['solutions']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -91,6 +98,9 @@ def main():
 
     elif contests:
         get_contests()
+
+    elif solution_list_problem_code:
+        get_solutions(solution_list_problem_code, page)
 
     else:
         parser.print_help()
