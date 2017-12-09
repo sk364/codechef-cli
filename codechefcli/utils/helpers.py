@@ -27,8 +27,8 @@ def get_session():
     return session
 
 
-def more(filename='.tmp.codechefcli.tbl'):
-    subprocess.call(['cat ' + filename + ' | more'], shell=True)
+def less(filename='.tmp.codechefcli.tbl'):
+    subprocess.call(['cat ' + filename + ' | less -R'], shell=True)
 
 
 def print_table(table_html):
@@ -64,7 +64,7 @@ def print_table(table_html):
     with open(filename, 'w') as f:
         f.write(data_str)
 
-    more(filename=filename)
+    less(filename=filename)
 
     if os.path.exists(filename):
         os.remove(filename)
