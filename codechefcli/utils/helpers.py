@@ -4,7 +4,7 @@ import subprocess
 import requests
 from bs4 import BeautifulSoup
 
-from .constants import COOKIES_FILE_PATH
+from .constants import COOKIES_FILE_PATH, USER_AGENT
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -19,6 +19,7 @@ def get_session():
     """
 
     session = requests.Session()
+    session.headers = {'User-Agent': USER_AGENT}
 
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
@@ -31,7 +32,7 @@ def less(filename='.tmp.codechefcli.tbl'):
     subprocess.call(['cat ' + filename + ' | less -R'], shell=True)
 
 
-def print_table(table_html):
+def print_table(table_html, use_less=True):
     """
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
@@ -60,14 +61,19 @@ def print_table(table_html):
             data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
 
-    filename = '.tmp.codechefcli.tbl'
-    with open(filename, 'w') as f:
-        f.write(data_str)
+    data_str = data_str.strip()
 
-    less(filename=filename)
+    if use_less:
+        filename = '.tmp.codechefcli.tbl'
+        with open(filename, 'w') as f:
+            f.write(data_str)
 
-    if os.path.exists(filename):
-        os.remove(filename)
+        less(filename=filename)
+
+        if os.path.exists(filename):
+            os.remove(filename)
+    else:
+        print(data_str)
 
 
 def bold(text):
