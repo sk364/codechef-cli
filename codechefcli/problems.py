@@ -222,3 +222,31 @@ def get_solutions(problem_code, page):
         print_table(str(solution_table))
     else:
         print(SERVER_DOWN_MSG)
+
+
+def get_solution(solution_code):
+    """
+    :desc: Retrieves a solution
+    :param: `solution_code` Code of the solution.
+    """
+
+    session = get_session()
+    req_obj = session.get(BASE_URL + '/viewsolution/' + solution_code)
+
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+
+        ol = soup.find('ol')
+        lis = ol.find_all('li')
+        status_table = soup.find('table', attrs={'class': 'status-table'})
+
+        code = ''
+        for li in lis:
+            code += li.text + '\n'
+
+        print('\n' + bold('Solution:') + '\n')
+        print(code)
+        print('\n' + bold('Submission Info:') + '\n')
+        print_table(str(status_table), use_less=False)
+    else:
+        print(SERVER_DOWN_MSG)

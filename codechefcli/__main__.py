@@ -2,8 +2,8 @@ import argparse
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import (get_contests, get_description, get_solutions,
-                       search_problems, submit_problem)
+from .problems import (get_contests, get_description, get_solution,
+                       get_solutions, search_problems, submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -54,7 +54,8 @@ def create_parser():
                         default=1, type=int, help='Gets specific page. Default: 1')
     parser.add_argument('--solutions', required=False, metavar='<Problem Code>',
                         help='Prints solutions list for a problem')
-    parser.add_argument('--solution', required=False, metavar='<Solution Code>')
+    parser.add_argument('--solution', required=False, metavar='<Solution Code>',
+                        help='Prints a solution')
     return parser
 
 
@@ -75,6 +76,7 @@ def main():
     contests = args['contests']
     page = args['page']
     solution_list_problem_code = args['solutions']
+    solution_code = args['solution']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -101,6 +103,9 @@ def main():
 
     elif solution_list_problem_code:
         get_solutions(solution_list_problem_code, page)
+
+    elif solution_code:
+        get_solution(solution_code)
 
     else:
         parser.print_help()
