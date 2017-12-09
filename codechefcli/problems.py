@@ -213,11 +213,11 @@ def get_solutions(problem_code, page):
 
         rows = solution_table.find_all('tr')
         headings = rows[0].find_all('th')
-        last_heading = headings[-1].extract()
+        headings[-1].extract()
 
         for row in rows[1:]:
             cols = row.find_all('td')
-            last_col = cols[-1].extract()
+            cols[-1].extract()
 
         print_table(str(solution_table))
     else:
