@@ -12,14 +12,16 @@ except ImportError:
     from cookielib import LWPCookieJar
 
 
-def get_session():
+def get_session(fake_browser=False):
     """
     :desc: Builds session from the saved cookies
     :return: requests.Session object
     """
 
     session = requests.Session()
-    session.headers = {'User-Agent': USER_AGENT}
+
+    if fake_browser:
+        session.headers = {'User-Agent': USER_AGENT}
 
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
@@ -29,10 +31,10 @@ def get_session():
 
 
 def less(filename='.tmp.codechefcli.tbl'):
-    subprocess.call(['cat ' + filename + ' | less -R'], shell=True)
+    subprocess.call(['cat ' + filename + ' | less -XF'], shell=True)
 
 
-def print_table(table_html, use_less=True):
+def print_table(table_html):
     """
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
@@ -63,17 +65,14 @@ def print_table(table_html, use_less=True):
 
     data_str = data_str.strip()
 
-    if use_less:
-        filename = '.tmp.codechefcli.tbl'
-        with open(filename, 'w') as f:
-            f.write(data_str)
+    filename = '.tmp.codechefcli.tbl'
+    with open(filename, 'w') as f:
+        f.write(data_str)
 
-        less(filename=filename)
+    less(filename=filename)
 
-        if os.path.exists(filename):
-            os.remove(filename)
-    else:
-        print(data_str)
+    if os.path.exists(filename):
+        os.remove(filename)
 
 
 def bold(text):

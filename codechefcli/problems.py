@@ -191,6 +191,7 @@ def get_contests():
         for i in range(1, 4):
             print(bold(labels[i-1] + ' Contests:\n'))
             print_table(str(tables[i]))
+            print('\n')
     else:
         print(SERVER_DOWN_MSG)
 
@@ -210,6 +211,7 @@ def get_solutions(problem_code, page):
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         solution_table = soup.find_all('table')[2]
+        page_info = soup.find('div', attrs={'class': 'pageinfo'})
 
         rows = solution_table.find_all('tr')
         headings = rows[0].find_all('th')
@@ -220,6 +222,7 @@ def get_solutions(problem_code, page):
             cols[-1].extract()
 
         print_table(str(solution_table))
+        print('\nPage: ' + page_info.text)
     else:
         print(SERVER_DOWN_MSG)
 
@@ -230,7 +233,7 @@ def get_solution(solution_code):
     :param: `solution_code` Code of the solution.
     """
 
-    session = get_session()
+    session = get_session(fake_browser=True)
     req_obj = session.get(BASE_URL + '/viewsolution/' + solution_code)
 
     if req_obj.status_code == 200:
@@ -247,6 +250,6 @@ def get_solution(solution_code):
         print('\n' + bold('Solution:') + '\n')
         print(code)
         print('\n' + bold('Submission Info:') + '\n')
-        print_table(str(status_table), use_less=False)
+        print_table(str(status_table))
     else:
         print(SERVER_DOWN_MSG)
