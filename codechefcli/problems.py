@@ -206,23 +206,26 @@ def get_solutions(problem_code, page):
     session = get_session()
 
     params = {'page': page - 1} if page != 1 else {}
-    req_obj = session.get(BASE_URL + '/status/' + problem_code, params=params)
+    req_obj = session.get(BASE_URL + '/status/' + problem_code.upper(), params=params)
 
     if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        solution_table = soup.find_all('table')[2]
-        page_info = soup.find('div', attrs={'class': 'pageinfo'})
+        if 'SUBMISSIONS FOR ' + problem_code.upper() in req_obj.text:
+            soup = BeautifulSoup(req_obj.text, 'html.parser')
+            solution_table = soup.find_all('table')[2]
+            page_info = soup.find('div', attrs={'class': 'pageinfo'})
 
-        rows = solution_table.find_all('tr')
-        headings = rows[0].find_all('th')
-        headings[-1].extract()
+            rows = solution_table.find_all('tr')
+            headings = rows[0].find_all('th')
+            headings[-1].extract()
 
-        for row in rows[1:]:
-            cols = row.find_all('td')
-            cols[-1].extract()
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                cols[-1].extract()
 
-        print_table(str(solution_table))
-        print('\nPage: ' + page_info.text)
+            print_table(str(solution_table))
+            print('\nPage: ' + page_info.text)
+        else:
+            print('Invalid Problem Code.')
     else:
         print(SERVER_DOWN_MSG)
 
@@ -237,19 +240,22 @@ def get_solution(solution_code):
     req_obj = session.get(BASE_URL + '/viewsolution/' + solution_code)
 
     if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        if 'Solution: ' + solution_code in req_obj.text:
+            soup = BeautifulSoup(req_obj.text, 'html.parser')
 
-        ol = soup.find('ol')
-        lis = ol.find_all('li')
-        status_table = soup.find('table', attrs={'class': 'status-table'})
+            ol = soup.find('ol')
+            lis = ol.find_all('li')
+            status_table = soup.find('table', attrs={'class': 'status-table'})
 
-        code = ''
-        for li in lis:
-            code += li.text + '\n'
+            code = ''
+            for li in lis:
+                code += li.text + '\n'
 
-        print('\n' + bold('Solution:') + '\n')
-        print(code)
-        print('\n' + bold('Submission Info:') + '\n')
-        print_table(str(status_table))
+            print('\n' + bold('Solution:') + '\n')
+            print(code)
+            print('\n' + bold('Submission Info:') + '\n')
+            print_table(str(status_table))
+        else:
+            print('Invalid Solution Code.')
     else:
         print(SERVER_DOWN_MSG)
