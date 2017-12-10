@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, SERVER_DOWN_MSG, RESULT_CODES
+from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
 from .utils.helpers import bold, get_session, print_table
 
 
