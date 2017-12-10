@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, SERVER_DOWN_MSG
+from .utils.constants import BASE_URL, SERVER_DOWN_MSG, RESULT_CODES
 from .utils.helpers import bold, get_session, print_table
 
 
@@ -196,7 +196,7 @@ def get_contests():
         print(SERVER_DOWN_MSG)
 
 
-def get_solutions(problem_code, page):
+def get_solutions(problem_code, page, language, result, username):
     """
     :desc: Retrieves solutions list of a problem.
     :param: `problem_code` Code of the problem.
@@ -204,12 +204,27 @@ def get_solutions(problem_code, page):
     """
 
     session = get_session()
-
     params = {'page': page - 1} if page != 1 else {}
+
+    if language:
+        req_obj = session.get(BASE_URL + '/status/' + problem_code.upper())
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        lang_dropdown = soup.find('select', id='language')
+        options = lang_dropdown.find_all('option')
+
+        for option in options:
+            if language.upper() == option.text.strip().upper():
+                params['language'] = option['value']
+                break
+    if result:
+        params['status'] = RESULT_CODES[result.upper()]
+    if username:
+        params['handle'] = username
+
     req_obj = session.get(BASE_URL + '/status/' + problem_code.upper(), params=params)
 
     if req_obj.status_code == 200:
-        if 'SUBMISSIONS FOR ' + problem_code.upper() in req_obj.text:
+        if 'SUBMISSIONS FOR ' in req_obj.text:
             soup = BeautifulSoup(req_obj.text, 'html.parser')
             solution_table = soup.find_all('table')[2]
             page_info = soup.find('div', attrs={'class': 'pageinfo'})
@@ -223,7 +238,8 @@ def get_solutions(problem_code, page):
                 cols[-1].extract()
 
             print_table(str(solution_table))
-            print('\nPage: ' + page_info.text)
+            if page_info:
+                print('\nPage: ' + page_info.text)
         else:
             print('Invalid Problem Code.')
     else:
