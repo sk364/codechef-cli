@@ -17,7 +17,7 @@ def get_user(username):
     if req_obj.status_code == 200:
         if 'Team handle' in req_obj.text:
             team_url = BASE_URL + '/teams/view/' + username
-            return 'This is a team handle. View at: ' + team_url + '\n'
+            print('This is a team handle. View at: ' + team_url + '\n')
 
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         header = soup.find_all('header')[1].text.strip()
@@ -30,8 +30,8 @@ def get_user(username):
         user_details += 'Global Rank: ' + ranks[0].text.split()[0] + '\n'
         user_details += 'Country Rank: ' + ranks[1].text.split()[0] + '\n\n'
 
-        return user_details
+        print(user_details)
     elif req_obj.status_code == 404:
-        return 'User not found.'
+        print('User not found.')
     else:
-        return SERVER_DOWN_MSG
+        print(SERVER_DOWN_MSG)

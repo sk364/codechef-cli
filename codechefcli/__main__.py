@@ -96,7 +96,7 @@ def main():
         exit(0)
 
     elif problem_code:
-        print(get_description(problem_code))
+        get_description(problem_code)
 
     elif submit:
         submit_problem(*submit)
@@ -114,7 +114,7 @@ def main():
         get_solution(solution_code)
 
     elif user:
-        print(get_user(user))
+        get_user(user)
 
     else:
         parser.print_help()

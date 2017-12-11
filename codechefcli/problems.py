@@ -1,3 +1,5 @@
+from pydoc import pager
+
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
@@ -23,11 +25,13 @@ def get_description(problem_code):
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
             problem_info = soup.find_all('table')[2].text
-            return content.text + problem_info
+            problem_desc = content.text + problem_info
+            pager(problem_desc)
+            print(problem_desc)
         else:
-            return 'Problem not found'
+            print('Problem not found')
     else:
-        return SERVER_DOWN_MSG
+        print(SERVER_DOWN_MSG)
 
 
 def get_form_token(problem_submit_html):

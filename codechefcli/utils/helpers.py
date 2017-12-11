@@ -1,5 +1,5 @@
 import os
-import subprocess
+from pydoc import pager
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,10 +28,6 @@ def get_session(fake_browser=False):
         session.cookies.load(ignore_discard=True, ignore_expires=True)
 
     return session
-
-
-def less(filename='.tmp.codechefcli.tbl'):
-    subprocess.call(['cat ' + filename + ' | less -XF'], shell=True)
 
 
 def print_table(table_html):
@@ -64,15 +60,8 @@ def print_table(table_html):
         data_str += '\n\n'
 
     data_str = data_str.strip()
-
-    filename = '.tmp.codechefcli.tbl'
-    with open(filename, 'w') as f:
-        f.write(data_str)
-
-    less(filename=filename)
-
-    if os.path.exists(filename):
-        os.remove(filename)
+    pager(data_str)
+    print(data_str)
 
 
 def bold(text):
