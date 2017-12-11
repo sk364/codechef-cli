@@ -47,8 +47,10 @@ def create_parser():
     parser.add_argument('--submit', nargs=3, required=False, metavar=('<Problem Code>',
                         '<Solution File Path>', '<Language>'), help='Eg: C++, C, Python, Python3, \
                         java, etc. (case-insensitive)')
-    parser.add_argument('--search', required=False, metavar='<Contest Code>',
-                        help='Contest code examples - OCT17, COOK88')
+    parser.add_argument('--search', required=False, metavar='<type>',
+                        help='type is either school / easy / medium / hard / challenge / extcontest \
+                             / <contest code>. <contest code> examples - OCT17, COOK88.\
+                             (case-insensitive)')
     parser.add_argument('--contests', required=False, action='store_true',
                         help='Get All Contests')
     parser.add_argument('--page', '-p', required=False, metavar='<Page Number>',
@@ -77,7 +79,7 @@ def main():
     problem_code = args['problem']
     user = args['user']
     submit = args['submit']
-    contest_code = args['search']
+    search = args['search']
     contests = args['contests']
     page = args['page']
     solution_list_problem_code = args['solutions']
@@ -99,8 +101,8 @@ def main():
     elif submit:
         submit_problem(*submit)
 
-    elif contest_code:
-        search_problems(contest_code)
+    elif search:
+        search_problems(search)
 
     elif contests:
         get_contests()

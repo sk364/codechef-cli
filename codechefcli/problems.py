@@ -156,20 +156,25 @@ def submit_problem(problem_code, solution_file, language):
         print(SERVER_DOWN_MSG)
 
 
-def search_problems(contest_code):
+def search_problems(search_type):
     """
-    :desc: Retrieves contest problems.
-    :param: `contest_code` Code of the contest. (Eg, OCT17, COOK88)
-    :return: None
+    :desc: Retrieves problems of the specific type.
+    :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
+            / contest code (eg: OCT17, nov16, etc.)
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/' + contest_code)
+    search_types = ['school', 'easy', 'medium', 'hard', 'challenge', 'extcontest']
 
+    if search_type.lower() in search_types:
+        search_url = BASE_URL + '/problems/' + search_type.lower()
+    else:
+        search_url = BASE_URL + '/' + search_type.upper()
+
+    req_obj = session.get(search_url)
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
-
         print_table(table_html)
     else:
         print(SERVER_DOWN_MSG)
