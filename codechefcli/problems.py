@@ -31,7 +31,7 @@ def get_description(problem_code):
             print_inverse_table(str(soup.find_all('table')[2]))
         else:
             print('Problem not found')
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -76,7 +76,10 @@ def get_compilation_error(status_code):
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         return soup.find('div', class_='cc-error-txt').text
 
-    return SERVER_DOWN_MSG
+    if req_obj.status_code == 503:
+        return SERVER_DOWN_MSG
+
+    return ''
 
 
 def get_language_code(problem_submit_html, language):
@@ -113,7 +116,7 @@ def submit_problem(problem_code, solution_file, language):
     if req_obj.status_code == 200:
         form_token = get_form_token(req_obj.text)
         language_code = get_language_code(req_obj.text, language)
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
         return
 
@@ -157,7 +160,7 @@ def submit_problem(problem_code, solution_file, language):
 
                 print_table(get_error_table(status_code))
                 break
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -181,7 +184,7 @@ def search_problems(search_type):
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
         print_table(table_html)
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -202,7 +205,7 @@ def get_contests():
             print(bold(labels[i-1] + ' Contests:\n'))
             print_table(str(tables[i]))
             print('\n')
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -252,7 +255,7 @@ def get_solutions(problem_code, page, language, result, username):
                 print('\nPage: ' + page_info.text)
         else:
             print('Invalid Problem Code.')
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -283,5 +286,5 @@ def get_solution(solution_code):
             print_table(str(status_table))
         else:
             print('Invalid Solution Code.')
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)

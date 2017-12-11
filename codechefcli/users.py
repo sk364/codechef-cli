@@ -33,5 +33,5 @@ def get_user(username):
         print(user_details)
     elif req_obj.status_code == 404:
         print('User not found.')
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
