@@ -34,7 +34,6 @@ def print_table(table_html):
     """
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
-    :return: None
     """
 
     if not table_html:
@@ -43,7 +42,7 @@ def print_table(table_html):
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
-    num_cols = len(th_tags)
+    num_cols = len(th_tags) or len(rows[1].find_all('td'))
     max_len_in_cols = [0] * num_cols
     headings = [[row.text.strip() for row in th_tags]]
     data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
@@ -60,6 +59,29 @@ def print_table(table_html):
         data_str += '\n\n'
 
     data_str = data_str.strip()
+    pager(data_str)
+    print(data_str)
+
+
+def print_inverse_table(table_html):
+    """
+    :desc: Prints data in "inverse" tabular format.
+    :param: `table_html` HTML text containing <table> tag.
+    """
+
+    if not table_html:
+        return
+
+    soup = BeautifulSoup(table_html, 'html.parser')
+    rows = soup.find_all('tr')
+
+    data_str = ''
+    for row in rows:
+        cols = row.find_all('td')
+        for col in cols:
+            data_str += ' '.join(col.text.strip().split()) + '    '
+        data_str += '\n'
+
     pager(data_str)
     print(data_str)
 

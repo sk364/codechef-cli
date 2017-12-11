@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 from .decorators import login_required
 from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
-from .utils.helpers import bold, get_session, print_table
+from .utils.helpers import bold, get_session, print_inverse_table, print_table
 
 
 def get_description(problem_code):
@@ -24,10 +24,11 @@ def get_description(problem_code):
             content = soup.find_all('div', class_='content')[1]
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
-            problem_info = soup.find_all('table')[2].text
-            problem_desc = content.text + problem_info
-            pager(problem_desc)
-            print(problem_desc)
+            print(bold('Problem Description: '))
+            pager(content.text)
+            print(content.text)
+            print('\n' + bold('Problem Info: '))
+            print_inverse_table(str(soup.find_all('table')[2]))
         else:
             print('Problem not found')
     else:
