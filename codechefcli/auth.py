@@ -64,7 +64,7 @@ def login(username, password):
                         if disconnect_req_obj.status_code == 200:
                             print('Disconnected other sessions.\nSuccessfully logged in.')
                             save_cookies = True
-                        else:
+                        elif req_obj.status_code == 503:
                             print(SERVER_DOWN_MSG)
                     else:
                         logout(session=session)
@@ -77,7 +77,7 @@ def login(username, password):
                 if save_cookies:
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
                     session.cookies.save(ignore_expires=True, ignore_discard=True)
-            else:
+            elif req_obj.status_code == 503:
                 print(SERVER_DOWN_MSG)
     else:
         print('Username/Password field left blank. Please try again!')
@@ -98,5 +98,5 @@ def logout(session=None):
 
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)

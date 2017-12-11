@@ -2,8 +2,8 @@ import argparse
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import (get_contests, get_description, search_problems,
-                       submit_problem)
+from .problems import (get_contests, get_description, get_solution,
+                       get_solutions, search_problems, submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -40,16 +40,29 @@ def create_parser():
     parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
                         default='##no_login##')
     parser.add_argument('--logout', required=False, action='store_true')
-    parser.add_argument('--problem', '-p', required=False, metavar='<Problem Code>')
-    parser.add_argument('--user', '-u', required=False, metavar='username')
-    parser.add_argument('--submit', nargs=3, required=False,
-                        metavar=('<Problem Code>', '<Solution File Path>', '<Language>'),
-                        help='Language is case-insensitive. \
-                              Few examples: C++, C, Python, Python3, java, etc.')
-    parser.add_argument('--search', required=False, metavar='<Contest Code>',
-                        help='Contest code examples - OCT17, COOK88')
+    parser.add_argument('--problem', required=False, metavar='<Problem Code>',
+                        help='Get Problem Description.')
+    parser.add_argument('--user', '-u', required=False, metavar='username',
+                        help='Get user information. This arg can also be used for filtering data.')
+    parser.add_argument('--submit', nargs=3, required=False, metavar=('<Problem Code>',
+                        '<Solution File Path>', '<Language>'), help='Eg: C++, C, Python, Python3, \
+                        java, etc. (case-insensitive)')
+    parser.add_argument('--search', required=False, metavar='<type>',
+                        help='type is either school / easy / medium / hard / challenge / extcontest \
+                             / <contest code>. <contest code> examples - OCT17, COOK88.\
+                             (case-insensitive)')
     parser.add_argument('--contests', required=False, action='store_true',
                         help='Get All Contests')
+    parser.add_argument('--page', '-p', required=False, metavar='<Page Number>',
+                        default=1, type=int, help='Gets specific page. Default: 1')
+    parser.add_argument('--solutions', required=False, metavar='<Problem Code>',
+                        help='Prints solutions list for a problem')
+    parser.add_argument('--solution', required=False, metavar='<Solution Code>',
+                        help='Prints a solution')
+    parser.add_argument('--language', required=False, help='Eg: C++, C, python3, java. This arg \
+                        can also be used for filtering data. (case-insensitive)')
+    parser.add_argument('--result', '-r', required=False, help='Result of the solution. Choices: \
+                        AC, WA, TLE, RTE, CTE. Default="ALL". (case-insensitive)')
     return parser
 
 
@@ -64,10 +77,15 @@ def main():
     username = args['login']
     is_logout = args['logout']
     problem_code = args['problem']
-    search_username = args['user']
+    user = args['user']
     submit = args['submit']
-    contest_code = args['search']
+    search = args['search']
     contests = args['contests']
+    page = args['page']
+    solution_list_problem_code = args['solutions']
+    solution_code = args['solution']
+    language = args['language']
+    result = args['result']
 
     if username != '##no_login##':
         prompt('login', username=username)
@@ -78,19 +96,25 @@ def main():
         exit(0)
 
     elif problem_code:
-        print(get_description(problem_code))
-
-    elif search_username:
-        print(get_user(search_username))
+        get_description(problem_code)
 
     elif submit:
         submit_problem(*submit)
 
-    elif contest_code:
-        search_problems(contest_code)
+    elif search:
+        search_problems(search)
 
     elif contests:
         get_contests()
+
+    elif solution_list_problem_code:
+        get_solutions(solution_list_problem_code, page, language, result, user)
+
+    elif solution_code:
+        get_solution(solution_code)
+
+    elif user:
+        get_user(user)
 
     else:
         parser.print_help()

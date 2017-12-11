@@ -1,10 +1,10 @@
 import os
-import subprocess
+from pydoc import pager
 
 import requests
 from bs4 import BeautifulSoup
 
-from .constants import COOKIES_FILE_PATH
+from .constants import COOKIES_FILE_PATH, USER_AGENT
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -12,13 +12,16 @@ except ImportError:
     from cookielib import LWPCookieJar
 
 
-def get_session():
+def get_session(fake_browser=False):
     """
     :desc: Builds session from the saved cookies
     :return: requests.Session object
     """
 
     session = requests.Session()
+
+    if fake_browser:
+        session.headers = {'User-Agent': USER_AGENT}
 
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
@@ -27,15 +30,10 @@ def get_session():
     return session
 
 
-def more(filename='.tmp.codechefcli.tbl'):
-    subprocess.call(['cat ' + filename + ' | more'], shell=True)
-
-
 def print_table(table_html):
     """
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
-    :return: None
     """
 
     if not table_html:
@@ -44,7 +42,7 @@ def print_table(table_html):
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
-    num_cols = len(th_tags)
+    num_cols = len(th_tags) or len(rows[1].find_all('td'))
     max_len_in_cols = [0] * num_cols
     headings = [[row.text.strip() for row in th_tags]]
     data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
@@ -60,14 +58,32 @@ def print_table(table_html):
             data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
 
-    filename = '.tmp.codechefcli.tbl'
-    with open(filename, 'w') as f:
-        f.write(data_str)
+    data_str = data_str.strip()
+    pager(data_str)
+    print(data_str)
 
-    more(filename=filename)
 
-    if os.path.exists(filename):
-        os.remove(filename)
+def print_inverse_table(table_html):
+    """
+    :desc: Prints data in "inverse" tabular format.
+    :param: `table_html` HTML text containing <table> tag.
+    """
+
+    if not table_html:
+        return
+
+    soup = BeautifulSoup(table_html, 'html.parser')
+    rows = soup.find_all('tr')
+
+    data_str = ''
+    for row in rows:
+        cols = row.find_all('td')
+        for col in cols:
+            data_str += ' '.join(col.text.strip().split()) + '    '
+        data_str += '\n'
+
+    pager(data_str)
+    print(data_str)
 
 
 def bold(text):

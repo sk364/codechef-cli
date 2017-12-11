@@ -1,8 +1,10 @@
+from pydoc import pager
+
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, SERVER_DOWN_MSG
-from .utils.helpers import bold, get_session, print_table
+from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.helpers import bold, get_session, print_inverse_table, print_table
 
 
 def get_description(problem_code):
@@ -22,12 +24,15 @@ def get_description(problem_code):
             content = soup.find_all('div', class_='content')[1]
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
-            problem_info = soup.find_all('table')[2].text
-            return content.text + problem_info
+            print(bold('Problem Description: '))
+            pager(content.text)
+            print(content.text)
+            print('\n' + bold('Problem Info: '))
+            print_inverse_table(str(soup.find_all('table')[2]))
         else:
-            return 'Problem not found'
-    else:
-        return SERVER_DOWN_MSG
+            print('Problem not found')
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
 
 
 def get_form_token(problem_submit_html):
@@ -71,7 +76,10 @@ def get_compilation_error(status_code):
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         return soup.find('div', class_='cc-error-txt').text
 
-    return SERVER_DOWN_MSG
+    if req_obj.status_code == 503:
+        return SERVER_DOWN_MSG
+
+    return ''
 
 
 def get_language_code(problem_submit_html, language):
@@ -108,7 +116,7 @@ def submit_problem(problem_code, solution_file, language):
     if req_obj.status_code == 200:
         form_token = get_form_token(req_obj.text)
         language_code = get_language_code(req_obj.text, language)
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
         return
 
@@ -152,26 +160,31 @@ def submit_problem(problem_code, solution_file, language):
 
                 print_table(get_error_table(status_code))
                 break
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
-def search_problems(contest_code):
+def search_problems(search_type):
     """
-    :desc: Retrieves contest problems.
-    :param: `contest_code` Code of the contest. (Eg, OCT17, COOK88)
-    :return: None
+    :desc: Retrieves problems of the specific type.
+    :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
+            / contest code (eg: OCT17, nov16, etc.)
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/' + contest_code)
+    search_types = ['school', 'easy', 'medium', 'hard', 'challenge', 'extcontest']
 
+    if search_type.lower() in search_types:
+        search_url = BASE_URL + '/problems/' + search_type.lower()
+    else:
+        search_url = BASE_URL + '/' + search_type.upper()
+
+    req_obj = session.get(search_url)
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
-
         print_table(table_html)
-    else:
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
@@ -191,5 +204,87 @@ def get_contests():
         for i in range(1, 4):
             print(bold(labels[i-1] + ' Contests:\n'))
             print_table(str(tables[i]))
-    else:
+            print('\n')
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
+
+
+def get_solutions(problem_code, page, language, result, username):
+    """
+    :desc: Retrieves solutions list of a problem.
+    :param: `problem_code` Code of the problem.
+            `page` Page Number
+    """
+
+    session = get_session()
+    params = {'page': page - 1} if page != 1 else {}
+
+    if language:
+        req_obj = session.get(BASE_URL + '/status/' + problem_code.upper())
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        lang_dropdown = soup.find('select', id='language')
+        options = lang_dropdown.find_all('option')
+
+        for option in options:
+            if language.upper() == option.text.strip().upper():
+                params['language'] = option['value']
+                break
+    if result:
+        params['status'] = RESULT_CODES[result.upper()]
+    if username:
+        params['handle'] = username
+
+    req_obj = session.get(BASE_URL + '/status/' + problem_code.upper(), params=params)
+
+    if req_obj.status_code == 200:
+        if 'SUBMISSIONS FOR ' in req_obj.text:
+            soup = BeautifulSoup(req_obj.text, 'html.parser')
+            solution_table = soup.find_all('table')[2]
+            page_info = soup.find('div', attrs={'class': 'pageinfo'})
+
+            rows = solution_table.find_all('tr')
+            headings = rows[0].find_all('th')
+            headings[-1].extract()
+
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                cols[-1].extract()
+
+            print_table(str(solution_table))
+            if page_info:
+                print('\nPage: ' + page_info.text)
+        else:
+            print('Invalid Problem Code.')
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
+
+
+def get_solution(solution_code):
+    """
+    :desc: Retrieves a solution
+    :param: `solution_code` Code of the solution.
+    """
+
+    session = get_session(fake_browser=True)
+    req_obj = session.get(BASE_URL + '/viewsolution/' + solution_code)
+
+    if req_obj.status_code == 200:
+        if 'Solution: ' + solution_code in req_obj.text:
+            soup = BeautifulSoup(req_obj.text, 'html.parser')
+
+            ol = soup.find('ol')
+            lis = ol.find_all('li')
+            status_table = soup.find('table', attrs={'class': 'status-table'})
+
+            code = ''
+            for li in lis:
+                code += li.text + '\n'
+
+            print('\n' + bold('Solution:') + '\n')
+            print(code)
+            print('\n' + bold('Submission Info:') + '\n')
+            print_table(str(status_table))
+        else:
+            print('Invalid Solution Code.')
+    elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
