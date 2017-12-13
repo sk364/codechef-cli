@@ -96,7 +96,7 @@ def main():
         exit(0)
 
     elif problem_code:
-        get_description(problem_code)
+        get_description(problem_code, contest_code=search)
 
     elif submit:
         submit_problem(*submit)

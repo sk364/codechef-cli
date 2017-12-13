@@ -9,7 +9,7 @@ from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
 from .utils.helpers import bold, get_session, print_inverse_table, print_table
 
 
-def get_description(problem_code):
+def get_description(problem_code, contest_code=None):
     """
     :desc: Retrieves a particular problem description.
     :param: `problem_code` Code of the problem.
@@ -17,7 +17,13 @@ def get_description(problem_code):
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/problems/' + problem_code)
+
+    url = BASE_URL
+    if contest_code is not None:
+        url += '/' + contest_code
+    url += '/problems/' + problem_code
+
+    req_obj = session.get(url)
 
     if req_obj.status_code == 200:
         problem_html = req_obj.text
@@ -32,7 +38,12 @@ def get_description(problem_code):
             print('\n' + bold('Problem Info: '))
             print_inverse_table(str(soup.find_all('table')[2]))
         else:
-            print('Problem not found')
+            print('Problem not found.')
+            if contest_code is None:
+                print('Maybe, the problem exists only in the contest.\n'
+                      'Add "--search <contest code>" to search in the contest '
+                      'specific problems.')
+
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
@@ -206,7 +217,7 @@ def search_problems(search_type):
                 seconds = str((diff.seconds % 3600) % 60)
 
                 time_left_text = bold('Contest ends in ') + days + ' days, ' + hours + ' hours, ' +\
-                                 minutes + ' minutes, ' + seconds + ' seconds.'
+                    minutes + ' minutes, ' + seconds + ' seconds.'
             else:
                 time_left_text = bold('Contest ended.')
 
