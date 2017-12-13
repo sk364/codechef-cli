@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from pydoc import pager
 
 from bs4 import BeautifulSoup
@@ -174,16 +176,42 @@ def search_problems(search_type):
     session = get_session()
     search_types = ['school', 'easy', 'medium', 'hard', 'challenge', 'extcontest']
 
+    is_contest = False
     if search_type.lower() in search_types:
         search_url = BASE_URL + '/problems/' + search_type.lower()
     else:
         search_url = BASE_URL + '/' + search_type.upper()
+        is_contest = True
 
     req_obj = session.get(search_url)
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
         print_table(table_html)
+
+        if is_contest:
+            contest_timer_block = soup.find_all('div', attrs={'class': 'rounded-block'})[0]
+            timer_calc_script = contest_timer_block.find_all('script')
+
+            if timer_calc_script:
+                script_text = timer_calc_script[0].text
+                end_date_str = re.search(r'new Date\("([a-zA-Z0-9 ,:]*)"\)', script_text).group(1)
+                end_date_obj = datetime.strptime(end_date_str, '%B %d, %Y %H:%M:%S')
+                now = datetime.now()
+                diff = end_date_obj - now
+
+                days = str(diff.days)
+                hours = str(diff.seconds // 3600)
+                minutes = str((diff.seconds % 3600) // 60)
+                seconds = str((diff.seconds % 3600) % 60)
+
+                time_left_text = bold('Contest ends in ') + days + ' days, ' + hours + ' hours, ' +\
+                                 minutes + ' minutes, ' + seconds + ' seconds.'
+            else:
+                time_left_text = bold('Contest ended.')
+
+            print(time_left_text)
+
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
