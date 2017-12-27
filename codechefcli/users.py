@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 from .utils.constants import BASE_URL, SERVER_DOWN_MSG
-from .utils.helpers import get_session
+from .utils.helpers import get_session, request
 
 
 def get_user(username):
@@ -12,7 +12,8 @@ def get_user(username):
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/users/' + username)
+    url = BASE_URL + '/users/' + username
+    req_obj = request(session, 'GET', url)
 
     if req_obj.status_code == 200:
         if 'Team handle' in req_obj.text:

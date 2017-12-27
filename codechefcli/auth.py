@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from .decorators import login_required
 from .utils.constants import BASE_URL, COOKIES_FILE_PATH, SERVER_DOWN_MSG
-from .utils.helpers import get_session
+from .utils.helpers import get_session, request
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -47,7 +47,7 @@ def login(username, password):
         data = {'name': username, 'pass': password, 'form_id': 'new_login_form'}
         with requests.Session() as session:
             session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
-            req_obj = session.post(BASE_URL, data=data)
+            req_obj = request(session, 'POST', BASE_URL, data=data)
             save_cookies = False
 
             if req_obj.status_code == 200:
@@ -58,8 +58,8 @@ def login(username, password):
                     if proceed == 'Y' or proceed == '' or proceed == 'y':
                         action, other_active_sessions = get_other_active_sessions(req_obj.text)
                         disconnect_url = BASE_URL + action
-                        disconnect_req_obj = session.post(disconnect_url,
-                                                          data=other_active_sessions)
+                        disconnect_req_obj = request(session, 'POST', disconnect_url,
+                                                     data=other_active_sessions)
 
                         if disconnect_req_obj.status_code == 200:
                             print('Disconnected other sessions.\nSuccessfully logged in.')
@@ -92,10 +92,11 @@ def logout(session=None):
     """
 
     session = session or get_session()
-    req_obj = session.get(BASE_URL + '/logout')
+    url = BASE_URL + '/logout'
+    req_obj = request(session, 'GET', url)
+
     if req_obj.status_code == 200:
         print('Successfully logged out.')
-
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
     elif req_obj.status_code == 503:
