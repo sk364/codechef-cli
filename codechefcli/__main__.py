@@ -1,4 +1,5 @@
 import argparse
+import sys
 from getpass import getpass
 
 from .auth import login, logout
@@ -71,53 +72,57 @@ def main():
     :desc: Entry point method
     """
 
-    parser = create_parser()
-    args = vars(parser.parse_args())
+    try:
+        parser = create_parser()
+        args = vars(parser.parse_args())
 
-    username = args['login']
-    is_logout = args['logout']
-    problem_code = args['problem']
-    user = args['user']
-    submit = args['submit']
-    search = args['search']
-    contests = args['contests']
-    page = args['page']
-    solution_list_problem_code = args['solutions']
-    solution_code = args['solution']
-    language = args['language']
-    result = args['result']
+        username = args['login']
+        is_logout = args['logout']
+        problem_code = args['problem']
+        user = args['user']
+        submit = args['submit']
+        search = args['search']
+        contests = args['contests']
+        page = args['page']
+        solution_list_problem_code = args['solutions']
+        solution_code = args['solution']
+        language = args['language']
+        result = args['result']
 
-    if username != '##no_login##':
-        prompt('login', username=username)
-        exit(0)
+        if username != '##no_login##':
+            prompt('login', username=username)
+            exit(0)
 
-    elif is_logout:
-        logout()
-        exit(0)
+        elif is_logout:
+            logout()
+            exit(0)
 
-    elif problem_code:
-        get_description(problem_code, contest_code=search)
+        elif problem_code:
+            get_description(problem_code, contest_code=search)
 
-    elif submit:
-        submit_problem(*submit)
+        elif submit:
+            submit_problem(*submit)
 
-    elif search:
-        search_problems(search)
+        elif search:
+            search_problems(search)
 
-    elif contests:
-        get_contests()
+        elif contests:
+            get_contests()
 
-    elif solution_list_problem_code:
-        get_solutions(solution_list_problem_code, page, language, result, user)
+        elif solution_list_problem_code:
+            get_solutions(solution_list_problem_code, page, language, result, user)
 
-    elif solution_code:
-        get_solution(solution_code)
+        elif solution_code:
+            get_solution(solution_code)
 
-    elif user:
-        get_user(user)
+        elif user:
+            get_user(user)
 
-    else:
-        parser.print_help()
+        else:
+            parser.print_help()
+    except KeyboardInterrupt:
+        print('\nBye.')
+    sys.exit(0)
 
 
 if __name__ == '__main__':
