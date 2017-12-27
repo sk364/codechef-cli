@@ -6,7 +6,8 @@ from bs4 import BeautifulSoup
 
 from .decorators import login_required
 from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
-from .utils.helpers import bold, get_session, print_inverse_table, print_table
+from .utils.helpers import (bold, get_session, print_inverse_table,
+                            print_table, request)
 
 
 def get_description(problem_code, contest_code=None):
@@ -23,7 +24,7 @@ def get_description(problem_code, contest_code=None):
         url += '/' + contest_code
     url += '/problems/' + problem_code
 
-    req_obj = session.get(url)
+    req_obj = request(session, 'GET', url)
 
     if req_obj.status_code == 200:
         problem_html = req_obj.text
@@ -68,7 +69,7 @@ def get_error_table(status_code):
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/error_status_table/' + status_code)
+    req_obj = request(session, 'GET', BASE_URL + '/error_status_table/' + status_code)
     if req_obj.status_code == 200:
         return req_obj.text
 
@@ -83,7 +84,7 @@ def get_compilation_error(status_code):
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/view/error/' + status_code)
+    req_obj = request(session, 'GET', BASE_URL + '/view/error/' + status_code)
 
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
@@ -124,7 +125,7 @@ def submit_problem(problem_code, solution_file, language):
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/submit/' + problem_code)
+    req_obj = request(session, 'GET', BASE_URL + '/submit/' + problem_code)
 
     if req_obj.status_code == 200:
         form_token = get_form_token(req_obj.text)
@@ -146,7 +147,8 @@ def submit_problem(problem_code, solution_file, language):
     }
     post_files = {'files[sourcefile]': solution_file_obj}
 
-    req_obj = session.post(BASE_URL + '/submit/' + problem_code, data=post_data, files=post_files)
+    req_obj = request(session, 'POST', BASE_URL + '/submit/' + problem_code, data=post_data,
+                      files=post_files)
     if req_obj.status_code == 200:
         print('Problem Submitted...')
         print('Running code...\n')
@@ -154,7 +156,7 @@ def submit_problem(problem_code, solution_file, language):
         status_code = req_obj.url.split('/')[-1]
 
         while True:
-            status_req = session.get(BASE_URL + '/get_submission_status/' + status_code)
+            status_req = request(session, 'GET', BASE_URL + '/get_submission_status/' + status_code)
             try:
                 status_json = status_req.json()
             except ValueError:
@@ -194,7 +196,7 @@ def search_problems(search_type):
         search_url = BASE_URL + '/' + search_type.upper()
         is_contest = True
 
-    req_obj = session.get(search_url)
+    req_obj = request(session, 'GET', search_url)
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
@@ -233,7 +235,7 @@ def get_contests():
     """
 
     session = get_session()
-    req_obj = session.get(BASE_URL + '/contests')
+    req_obj = request(session, 'GET', BASE_URL + '/contests')
 
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
@@ -259,7 +261,7 @@ def get_solutions(problem_code, page, language, result, username):
     params = {'page': page - 1} if page != 1 else {}
 
     if language:
-        req_obj = session.get(BASE_URL + '/status/' + problem_code.upper())
+        req_obj = request(session, 'GET', BASE_URL + '/status/' + problem_code.upper())
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         lang_dropdown = soup.find('select', id='language')
         options = lang_dropdown.find_all('option')
@@ -273,7 +275,7 @@ def get_solutions(problem_code, page, language, result, username):
     if username:
         params['handle'] = username
 
-    req_obj = session.get(BASE_URL + '/status/' + problem_code.upper(), params=params)
+    req_obj = request(session, 'GET', BASE_URL + '/status/' + problem_code.upper(), params=params)
 
     if req_obj.status_code == 200:
         if 'SUBMISSIONS FOR ' in req_obj.text:
@@ -305,7 +307,7 @@ def get_solution(solution_code):
     """
 
     session = get_session(fake_browser=True)
-    req_obj = session.get(BASE_URL + '/viewsolution/' + solution_code)
+    req_obj = request(session, 'GET', BASE_URL + '/viewsolution/' + solution_code)
 
     if req_obj.status_code == 200:
         if 'Solution: ' + solution_code in req_obj.text:
