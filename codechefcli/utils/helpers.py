@@ -1,10 +1,13 @@
 import os
+import sys
 from pydoc import pager
 
 import requests
 from bs4 import BeautifulSoup
+from requests import ReadTimeout
+from requests.exceptions import ConnectionError
 
-from .constants import COOKIES_FILE_PATH, USER_AGENT
+from .constants import COOKIES_FILE_PATH, INTERNET_DOWN_MSG, USER_AGENT
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -28,6 +31,24 @@ def get_session(fake_browser=False):
         session.cookies.load(ignore_discard=True, ignore_expires=True)
 
     return session
+
+
+def request(session, method, url, **kwargs):
+    """
+    :desc: Custom wrapper method to add a timeout message
+           when there is a `requests.exceptions.ConnectionError`
+           or `requests.ReadTimeout` exception.
+    :param: `session` requests.Session object
+            `method` HTTP method to use
+            `url` name of the URL
+    :return: requests.Response object.
+    """
+
+    try:
+        return session.request(method=method, url=url, timeout=(5, 5), **kwargs)
+    except (ConnectionError, ReadTimeout):
+        print(INTERNET_DOWN_MSG)
+        sys.exit(1)
 
 
 def print_table(table_html):
