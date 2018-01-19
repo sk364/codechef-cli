@@ -4,7 +4,8 @@ from getpass import getpass
 
 from .auth import login, logout
 from .problems import (get_contests, get_description, get_solution,
-                       get_solutions, search_problems, submit_problem, get_tags)
+                       get_solutions, get_tags, search_problems,
+                       submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -91,11 +92,6 @@ def main():
         solution_code = args['solution']
         language = args['language']
         result = args['result']
-        tlen=-1
-        try:
-            tlen=len(tags)
-        except:
-            pass
         if username != '##no_login##':
             prompt('login', username=username)
             exit(0)
@@ -116,7 +112,7 @@ def main():
         elif contests:
             get_contests()
 
-        elif tags or tlen>=0:
+        elif tags or tags == []:
                 get_tags(tags)
 
         elif solution_list_problem_code:
