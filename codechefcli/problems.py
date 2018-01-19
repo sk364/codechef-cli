@@ -267,6 +267,8 @@ def get_tags(tags):
             data_rows = [['CODE', 'NAME', 'SUCCESSFUL SUBMISSION', 'ACCURACY']]
             all_tags = all_tags['all_problems']
             if all_tags == []:
+                print("Sorry, There are no problems with the following tags!!")
+            else:
                 for key, value in all_tags.items():
                     temp = []
                     try:
@@ -288,9 +290,6 @@ def get_tags(tags):
                         temp.append("")
                     data_rows.append(temp)
                 print_table(data_rows)
-            else:
-                print("Sorry, There are no problems with the following tags!!")
-
         elif req_obj.status_code == 503:
             print(SERVER_DOWN_MSG)
 
