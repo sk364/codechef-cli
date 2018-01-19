@@ -1,11 +1,11 @@
 import re
 from datetime import datetime
 from pydoc import pager
-
+import dryscrape
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG, SOMETHING_WENT_WRONG
 from .utils.helpers import (bold, get_session, print_inverse_table,
                             print_table, request)
 
@@ -232,6 +232,71 @@ def search_problems(search_type):
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
+def get_tags(tags):
+    session = get_session()
+    session1 = dryscrape.Session()
+    if len(tags) == 0:
+        url = BASE_URL + '/tags/problems'
+        req_obj = request(session, 'GET', url)
+        if req_obj.status_code == 200:
+            session1.visit(url)
+            response = session1.body()
+            soup = BeautifulSoup(response, 'html.parser')
+            all_tags = soup.find('div', id="page_tags").find_all('div', class_="problem-tag")
+            max_len_in_cols = 0
+            if(len(all_tags)==0):
+                print SOMETHING_WENT_WRONG
+            else:
+                for i in range(len(all_tags)):
+                    all_tags[i] = all_tags[i].text.strip()
+                    if len(all_tags[i]) > max_len_in_cols:
+                        max_len_in_cols = len(all_tags[i])
+                for i in range(len(all_tags)):
+                    if i%6!=0:
+                        print all_tags[i] + (max_len_in_cols - len(all_tags[i]) + 3 ) * ' ',
+                    else:
+                        print all_tags[i] + (max_len_in_cols - len(all_tags[i]) + 3 ) * ' '
+        elif req_obj.status_code == 503:
+            print(SERVER_DOWN_MSG)
+    else:
+        url = BASE_URL + '/tags/problems/' + ','.join(tags)
+        req_obj = request(session, 'GET', url)
+        if req_obj.status_code == 200:
+            session1.visit(url)
+            response = session1.body()
+            soup = BeautifulSoup(response, 'html.parser')
+            problems = soup.find_all('div', class_='problem-tagbox-inner')
+            max_len_in_cols = [0] * 2
+            max_len_in_cols.append(21)
+            max_len_in_cols.append(8)
+            if problems:
+                for i in range(len(problems)):
+                    name = problems[i].find('div',class_="problem-tagbox-headtext").text.strip()
+                    name, code = name.rsplit('-',1)
+                    if len(name.strip()) > max_len_in_cols[0]:
+                        max_len_in_cols[0] = len(name.strip())
+                    if len(code.strip()) > max_len_in_cols[1]:
+                        max_len_in_cols[1] = len(code.strip())
+
+                print bold('Name') + ( max_len_in_cols[0] - 4 + 2 ) * ' ',
+                print bold("Code") + ( max_len_in_cols[1] - 4 + 2 ) * ' ',
+                print bold("Successful Submission   "),
+                print bold("Accuracy   ")
+                for i in range(len(problems)):
+                    name = problems[i].find('div',class_="problem-tagbox-headtext").text.strip()
+                    name, code = name.rsplit('-',1)
+                    print name.strip() + (max_len_in_cols[0] - len(name) + 3) * ' ',
+                    print code.strip() + (max_len_in_cols[1] - len(code) + 3) * ' ',
+                    acc_and_sub = problems[i].find_all('div',class_="problem-tagbox-statusbox")
+                    accuracy = acc_and_sub[1].find('span').text.strip()
+                    submission = acc_and_sub[2].find('span').text.strip()
+                    print submission + (max_len_in_cols[2] - len(submission) + 3) * ' ',
+                    print accuracy + (max_len_in_cols[3] - len(accuracy) + 3) * ' '
+            else:
+                print SOMETHING_WENT_WRONG
+
+        elif req_obj.status_code == 503:
+            print(SERVER_DOWN_MSG)
 
 def get_contests():
     """
@@ -264,9 +329,9 @@ def get_solutions(problem_code, page, language, result, username):
 
     session = get_session()
     params = {'page': page - 1} if page != 1 else {}
-
+    url = BASE_URL + '/status/' + problem_code.upper()
     if language:
-        url = BASE_URL + '/status/' + problem_code.upper()
+
         req_obj = request(session, 'GET', url)
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         lang_dropdown = soup.find('select', id='language')
