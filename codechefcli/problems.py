@@ -1,14 +1,13 @@
 import json
 import math
 import re
-import urllib.request
 from datetime import datetime
 from pydoc import pager
 
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.constants import BASE_URL, HEADINGS, RESULT_CODES, SERVER_DOWN_MSG
 from .utils.helpers import (bold, get_session, html_to_list,
                             print_inverse_table, print_table, request)
 
@@ -238,60 +237,69 @@ def search_problems(search_type):
 
 
 def get_tags(tags):
-    session = get_session()
+    """
+    :desc: print all the tags and all the problems related to the combination of tags specified.
+    :param: list of the tags, whose combination is to be searched for problems.
+    """
     if len(tags) == 0:
-        url = BASE_URL + '/get/tags/problems'
-        req_obj = request(session, 'GET', url)
-        if req_obj.status_code == 200:
-            with urllib.request.urlopen(url) as urls:
-                all_tags = json.loads(urls.read().decode())
-            data_rows = []
-            temp = []
-            for en, all_tag in enumerate(all_tags):
-                if ((en + 1) % 6 != 0):
-                    temp.append(all_tag['tag'])
-                    print(temp)
-                else:
-                    data_rows.append(temp)
-                    temp = []
-            print_table(data_rows)
-
-        elif req_obj.status_code == 503:
-            print(SERVER_DOWN_MSG)
+        print_tags()
     else:
-        url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
-        req_obj = request(session, 'GET', url)
-        if req_obj.status_code == 200:
-            with urllib.request.urlopen(url) as urls:
-                all_tags = json.loads(urls.read().decode())
-            data_rows = [['CODE', 'NAME', 'SUCCESSFUL SUBMISSION', 'ACCURACY']]
-            all_tags = all_tags['all_problems']
-            if all_tags == []:
-                print("Sorry, There are no problems with the following tags!!")
+        print_problem_tags(tags)
+
+
+def print_tags():
+    """
+    :desc: prints all the tags
+    """
+    session = get_session()
+    url = BASE_URL + '/get/tags/problems'
+    req_obj = request(session, 'GET', url)
+    if req_obj.status_code == 200:
+        all_tags = json.loads(req_obj.text)
+        data_rows = []
+        temp = []
+        for en, all_tag in enumerate(all_tags):
+            if ((en + 1) % 6 != 0):
+                temp.append(all_tag['tag'])
             else:
-                for key, value in all_tags.items():
-                    temp = []
-                    try:
-                        temp.append(value['code'])
-                    except:
-                        temp.append("")
-                    try:
-                        temp.append(value['name'])
-                    except:
-                        temp.append("")
-                    try:
-                        temp.append(str(value['attempted_by']))
-                    except:
-                        temp.append("")
-                    try:
-                        accuracy = (value['solved_by']/value['attempted_by'])*100
-                        temp.append(str(math.floor(accuracy)))
-                    except:
-                        temp.append("")
-                    data_rows.append(temp)
-                print_table(data_rows)
-        elif req_obj.status_code == 503:
-            print(SERVER_DOWN_MSG)
+                data_rows.append(temp)
+                temp = []
+        print_table(data_rows)
+
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
+
+
+def print_problem_tags(tags):
+    """
+    :desc: prints all the problems containg the list of tags.
+    :params: list of all the tags
+    """
+    session = get_session()
+    url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
+    req_obj = request(session, 'GET', url)
+    if req_obj.status_code == 200:
+        all_tags = json.loads(req_obj.text)
+        data_rows = [[HEADINGS['code'], HEADINGS['name'],
+                     HEADINGS['submission'], HEADINGS['accuracy']]]
+        all_tags = all_tags['all_problems']
+        if all_tags == []:
+            print("Sorry, There are no problems with the following tags!!")
+        else:
+            for key, value in all_tags.items():
+                temp = []
+                temp.append(value.get('code', ''))
+                temp.append(value.get('name', ''))
+                temp.append(str(value.get('attempted_by', '')))
+                try:
+                    accuracy = (value.get('solved_by')/value.get('attempted_by'))*100
+                    temp.append(str(math.floor(accuracy)))
+                except:
+                    temp.append('')
+                data_rows.append(temp)
+            print_table(data_rows)
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
 
 
 def get_contests():

@@ -52,6 +52,11 @@ def request(session, method, url, **kwargs):
 
 
 def html_to_list(table_html):
+    """
+    :desc: Converts the input html table to a 2D list that
+           can be given as a input to the print_table function
+    :param: 'table_html' HTML text contaning <table> tag
+    """
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
@@ -68,7 +73,6 @@ def print_table(data_rows):
     num_cols = len(data_rows[0])
     max_len_in_cols = [0] * num_cols
     for row in data_rows:
-        print(row)
         for index, val in enumerate(row):
             if len(val) > max_len_in_cols[index]:
                 max_len_in_cols[index] = len(val)

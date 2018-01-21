@@ -66,7 +66,8 @@ def create_parser():
     parser.add_argument('--result', '-r', required=False, help='Result of the solution. Choices: \
                         AC, WA, TLE, RTE, CTE. Default="ALL". (case-insensitive)')
     parser.add_argument('--tags', required=False, nargs='*', metavar="<tags>",
-                        help='Get all the tags')
+                        help='with no arguments prints all the tags, and with arguments, \
+                        prints all the problems with the specified tags')
     return parser
 
 
