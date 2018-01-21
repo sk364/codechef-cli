@@ -294,7 +294,7 @@ def print_problem_tags(tags):
                 try:
                     accuracy = (value.get('solved_by')/value.get('attempted_by'))*100
                     temp.append(str(math.floor(accuracy)))
-                except:
+                except TypeError:
                     temp.append('')
                 data_rows.append(temp)
             print_table(data_rows)
