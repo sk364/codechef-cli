@@ -13,9 +13,4 @@ RESULT_CODES = {
     'RTE': 12,
     'CTE': 11
 }
-HEADINGS = {
-    'code': 'CODE',
-    'name': 'NAME',
-    'submission': 'SUCCESSFUL SUBMISSION',
-    'accuracy': 'ACCURACY'
-}
+TAG_HEADINGS = ['CODE', 'NAME', 'SUBMISSION', 'ACCURACY']

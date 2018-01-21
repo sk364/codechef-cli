@@ -1,4 +1,3 @@
-import json
 import math
 import re
 from datetime import datetime
@@ -7,7 +6,7 @@ from pydoc import pager
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, HEADINGS, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.constants import BASE_URL, TAG_HEADINGS, RESULT_CODES, SERVER_DOWN_MSG
 from .utils.helpers import (bold, get_session, html_to_list,
                             print_inverse_table, print_table, request)
 
@@ -255,7 +254,7 @@ def print_tags():
     url = BASE_URL + '/get/tags/problems'
     req_obj = request(session, 'GET', url)
     if req_obj.status_code == 200:
-        all_tags = json.loads(req_obj.text)
+        all_tags = req_obj.json()
         data_rows = []
         temp = []
         for en, all_tag in enumerate(all_tags):
@@ -279,9 +278,8 @@ def print_problem_tags(tags):
     url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
     req_obj = request(session, 'GET', url)
     if req_obj.status_code == 200:
-        all_tags = json.loads(req_obj.text)
-        data_rows = [[HEADINGS['code'], HEADINGS['name'],
-                     HEADINGS['submission'], HEADINGS['accuracy']]]
+        all_tags = req_obj.json()
+        data_rows = [TAG_HEADINGS]
         all_tags = all_tags['all_problems']
         if all_tags == []:
             print("Sorry, There are no problems with the following tags!!")

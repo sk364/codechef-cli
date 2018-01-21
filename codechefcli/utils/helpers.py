@@ -55,7 +55,7 @@ def html_to_list(table_html):
     """
     :desc: Converts the input html table to a 2D list that
            can be given as a input to the print_table function
-    :param: 'table_html' HTML text contaning <table> tag
+    :param: `table_html` HTML text contaning <table> tag
     """
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
