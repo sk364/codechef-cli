@@ -4,7 +4,8 @@ from getpass import getpass
 
 from .auth import login, logout
 from .problems import (get_contests, get_description, get_solution,
-                       get_solutions, search_problems, submit_problem)
+                       get_solutions, get_tags, search_problems,
+                       submit_problem)
 from .users import get_user
 
 # Supporting input in Python 2/3
@@ -64,6 +65,9 @@ def create_parser():
                         can also be used for filtering data. (case-insensitive)')
     parser.add_argument('--result', '-r', required=False, help='Result of the solution. Choices: \
                         AC, WA, TLE, RTE, CTE. Default="ALL". (case-insensitive)')
+    parser.add_argument('--tags', required=False, nargs='*', metavar="<tags>",
+                        help='with no arguments prints all the tags, and with arguments, \
+                        prints all the problems with the specified tags')
     return parser
 
 
@@ -83,12 +87,12 @@ def main():
         submit = args['submit']
         search = args['search']
         contests = args['contests']
+        tags = args['tags']
         page = args['page']
         solution_list_problem_code = args['solutions']
         solution_code = args['solution']
         language = args['language']
         result = args['result']
-
         if username != '##no_login##':
             prompt('login', username=username)
             exit(0)
@@ -108,6 +112,9 @@ def main():
 
         elif contests:
             get_contests()
+
+        elif tags or tags == []:
+                get_tags(tags)
 
         elif solution_list_problem_code:
             get_solutions(solution_list_problem_code, page, language, result, user)

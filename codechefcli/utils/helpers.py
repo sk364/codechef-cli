@@ -51,34 +51,36 @@ def request(session, method, url, **kwargs):
         sys.exit(1)
 
 
-def print_table(table_html):
+def html_to_list(table_html):
+    """
+    :desc: Converts the input html table to a 2D list that
+           can be given as a input to the print_table function
+    :param: `table_html` HTML text contaning <table> tag
+    """
+    soup = BeautifulSoup(table_html, 'html.parser')
+    rows = soup.find('table').find_all('tr')
+    th_tags = rows[0].find_all('th')
+    headings = [[row.text.strip() for row in th_tags]]
+    data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
+    return data_rows
+
+
+def print_table(data_rows):
     """
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
     """
-
-    if not table_html:
-        return
-
-    soup = BeautifulSoup(table_html, 'html.parser')
-    rows = soup.find('table').find_all('tr')
-    th_tags = rows[0].find_all('th')
-    num_cols = len(th_tags) or len(rows[1].find_all('td'))
+    num_cols = len(data_rows[0])
     max_len_in_cols = [0] * num_cols
-    headings = [[row.text.strip() for row in th_tags]]
-    data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
-
     for row in data_rows:
         for index, val in enumerate(row):
             if len(val) > max_len_in_cols[index]:
                 max_len_in_cols[index] = len(val)
-
     data_str = ''
     for row in data_rows:
         for index, val in enumerate(row):
             data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
         data_str += '\n\n'
-
     data_str = data_str.strip()
     pager(data_str)
     print(data_str)

@@ -13,3 +13,4 @@ RESULT_CODES = {
     'RTE': 12,
     'CTE': 11
 }
+TAG_HEADINGS = ['CODE', 'NAME', 'SUBMISSION', 'ACCURACY']

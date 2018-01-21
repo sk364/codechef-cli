@@ -1,3 +1,4 @@
+import math
 import re
 from datetime import datetime
 from pydoc import pager
@@ -5,9 +6,9 @@ from pydoc import pager
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, RESULT_CODES, SERVER_DOWN_MSG
-from .utils.helpers import (bold, get_session, print_inverse_table,
-                            print_table, request)
+from .utils.constants import BASE_URL, TAG_HEADINGS, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.helpers import (bold, get_session, html_to_list,
+                            print_inverse_table, print_table, request)
 
 
 def get_description(problem_code, contest_code=None):
@@ -176,8 +177,8 @@ def submit_problem(problem_code, solution_file, language):
                     print('Wrong answer\n')
                 elif result_code == 'accepted':
                     print('Correct answer\n')
-
-                print_table(get_error_table(status_code))
+                data_rows = html_to_list(get_error_table(status_code))
+                print_table(data_rows)
                 break
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
@@ -204,7 +205,8 @@ def search_problems(search_type):
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
-        print_table(table_html)
+        data_rows = html_to_list(table_html)
+        print_table(data_rows)
 
         if is_contest:
             contest_timer_block = soup.find_all('div', attrs={'class': 'rounded-block'})[0]
@@ -233,6 +235,71 @@ def search_problems(search_type):
         print(SERVER_DOWN_MSG)
 
 
+def get_tags(tags):
+    """
+    :desc: print all the tags and all the problems related to the combination of tags specified.
+    :param: list of the tags, whose combination is to be searched for problems.
+    """
+    if len(tags) == 0:
+        print_tags()
+    else:
+        print_problem_tags(tags)
+
+
+def print_tags():
+    """
+    :desc: prints all the tags
+    """
+    session = get_session()
+    url = BASE_URL + '/get/tags/problems'
+    req_obj = request(session, 'GET', url)
+    if req_obj.status_code == 200:
+        all_tags = req_obj.json()
+        data_rows = []
+        temp = []
+        for en, all_tag in enumerate(all_tags):
+            if ((en + 1) % 6 != 0):
+                temp.append(all_tag['tag'])
+            else:
+                data_rows.append(temp)
+                temp = []
+        print_table(data_rows)
+
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
+
+
+def print_problem_tags(tags):
+    """
+    :desc: prints all the problems containg the list of tags.
+    :params: list of all the tags
+    """
+    session = get_session()
+    url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
+    req_obj = request(session, 'GET', url)
+    if req_obj.status_code == 200:
+        all_tags = req_obj.json()
+        data_rows = [TAG_HEADINGS]
+        all_tags = all_tags['all_problems']
+        if all_tags == []:
+            print("Sorry, There are no problems with the following tags!!")
+        else:
+            for key, value in all_tags.items():
+                temp = []
+                temp.append(value.get('code', ''))
+                temp.append(value.get('name', ''))
+                temp.append(str(value.get('attempted_by', '')))
+                try:
+                    accuracy = (value.get('solved_by')/value.get('attempted_by'))*100
+                    temp.append(str(math.floor(accuracy)))
+                except TypeError:
+                    temp.append('')
+                data_rows.append(temp)
+            print_table(data_rows)
+    elif req_obj.status_code == 503:
+        print(SERVER_DOWN_MSG)
+
+
 def get_contests():
     """
     :desc: Retrieves contests.
@@ -249,7 +316,8 @@ def get_contests():
 
         for i in range(1, 4):
             print(bold(labels[i-1] + ' Contests:\n'))
-            print_table(str(tables[i]))
+            data_rows = html_to_list(str(tables[i]))
+            print_table(data_rows)
             print('\n')
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
@@ -264,9 +332,9 @@ def get_solutions(problem_code, page, language, result, username):
 
     session = get_session()
     params = {'page': page - 1} if page != 1 else {}
-
+    url = BASE_URL + '/status/' + problem_code.upper()
     if language:
-        url = BASE_URL + '/status/' + problem_code.upper()
+
         req_obj = request(session, 'GET', url)
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         lang_dropdown = soup.find('select', id='language')
@@ -296,8 +364,8 @@ def get_solutions(problem_code, page, language, result, username):
             for row in rows[1:]:
                 cols = row.find_all('td')
                 cols[-1].extract()
-
-            print_table(str(solution_table))
+            data_rows = html_to_list(str(solution_table))
+            print_table(data_rows)
             if page_info:
                 print('\nPage: ' + page_info.text)
         else:
@@ -331,7 +399,8 @@ def get_solution(solution_code):
             print('\n' + bold('Solution:') + '\n')
             print(code)
             print('\n' + bold('Submission Info:') + '\n')
-            print_table(str(status_table))
+            data_rows = html_to_list(str(status_table))
+            print_table(data_rows)
         else:
             print('Invalid Solution Code.')
     elif req_obj.status_code == 503:
