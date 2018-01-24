@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 from .decorators import login_required
 from .utils.constants import (BASE_URL, RATING_HEADINGS, RESULT_CODES,
-                              SERVER_DOWN_MSG, TAG_HEADINGS)
+                              SERVER_DOWN_MSG, PROBLEM_LIST_TABLE_HEADINGS)
 from .utils.helpers import (bold, get_session, html_to_list,
                             print_inverse_table, print_table, request)
 
@@ -238,9 +238,10 @@ def search_problems(search_type):
 
 def get_tags(tags):
     """
-    :desc: print all the tags and all the problems related to the combination of tags specified.
-    :param: list of the tags, whose combination is to be searched for problems.
+    :desc: Prints all tags or problems tagged with `tags`.
+    :param: `tags` list of input tags
     """
+
     if len(tags) == 0:
         print_tags()
     else:
@@ -249,21 +250,23 @@ def get_tags(tags):
 
 def print_tags():
     """
-    :desc: prints all the tags
+    :desc: Prints all tags.
     """
+
     session = get_session()
     url = BASE_URL + '/get/tags/problems'
     req_obj = request(session, 'GET', url)
     if req_obj.status_code == 200:
         all_tags = req_obj.json()
         data_rows = []
-        temp = []
+        row = []
+
         for en, all_tag in enumerate(all_tags):
             if ((en + 1) % 6 != 0):
-                temp.append(all_tag['tag'])
+                row.append(all_tag['tag'])
             else:
-                data_rows.append(temp)
-                temp = []
+                data_rows.append(row)
+                row = []
         print_table(data_rows)
 
     elif req_obj.status_code == 503:
@@ -272,30 +275,32 @@ def print_tags():
 
 def print_problem_tags(tags):
     """
-    :desc: prints all the problems containg the list of tags.
-    :params: list of all the tags
+    :desc: Prints problems tagged with `tags`.
+    :params: `tags` list of input tags
     """
+
     session = get_session()
     url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
     req_obj = request(session, 'GET', url)
     if req_obj.status_code == 200:
         all_tags = req_obj.json()
-        data_rows = [TAG_HEADINGS]
+        data_rows = [PROBLEM_LIST_TABLE_HEADINGS]
         all_tags = all_tags['all_problems']
+
         if all_tags == []:
-            print("Sorry, There are no problems with the following tags!!")
+            print("Sorry, there are no problems with the following tags!")
         else:
             for key, value in all_tags.items():
-                temp = []
-                temp.append(value.get('code', ''))
-                temp.append(value.get('name', ''))
-                temp.append(str(value.get('attempted_by', '')))
+                problem_info = []
+                problem_info.append(value.get('code', ''))
+                problem_info.append(value.get('name', ''))
+                problem_info.append(str(value.get('attempted_by', '')))
                 try:
-                    accuracy = (value.get('solved_by')/value.get('attempted_by'))*100
-                    temp.append(str(math.floor(accuracy)))
+                    accuracy = (value.get('solved_by') / value.get('attempted_by')) * 100
+                    problem_info.append(str(math.floor(accuracy)))
                 except TypeError:
-                    temp.append('')
-                data_rows.append(temp)
+                    problem_info.append('')
+                data_rows.append(problem_info)
             print_table(data_rows)
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)

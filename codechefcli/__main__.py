@@ -66,8 +66,9 @@ def create_parser():
     parser.add_argument('--result', '-r', required=False, help='Result of the solution. Choices: \
                         AC, WA, TLE, RTE, CTE. Default="ALL". (case-insensitive)')
     parser.add_argument('--tags', required=False, nargs='*', metavar="<tags>",
-                        help='with no arguments prints all the tags, and with arguments, \
-                        prints all the problems with the specified tags')
+                        help='Prints existing tags, if no argument passed. Pass tags as arguments \
+                              to search problems in a particular tag. Eg: --tags <tag 1> <tag 2> \
+                               ... <tag N>')
     parser.add_argument('--ratings', required=False, action="store_true", help='displays the ratings of the users \
                         that can be filtered with tags like --country, --institution, \
                         --institution_type, --set and number of lines is decided with \
