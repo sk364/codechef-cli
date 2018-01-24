@@ -6,7 +6,8 @@ from pydoc import pager
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, TAG_HEADINGS, RESULT_CODES, SERVER_DOWN_MSG
+from .utils.constants import (BASE_URL, RATING_HEADINGS, RESULT_CODES,
+                              SERVER_DOWN_MSG, TAG_HEADINGS)
 from .utils.helpers import (bold, get_session, html_to_list,
                             print_inverse_table, print_table, request)
 
@@ -298,6 +299,45 @@ def print_problem_tags(tags):
             print_table(data_rows)
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
+
+
+def get_ratings(country, institution, institution_type, lines, page):
+    """
+    :desc: displays the ratings of users. Result can be filtered according to
+    the country, institution, institution_type and sets. `line` decide the
+    number of lines to be shown. `page` tells which page of the result is to be shown
+    :param: values of all filters, lines to be displayed, page no. to be displayed
+    """
+    session = get_session()
+    url = BASE_URL + '/api/ratings/all?sortBy=global_rank&order=asc&page='
+    url += str((page or 1)) + '&itemsPerPage=' + str((lines or 20))
+    if country or institution or institution_type:
+        url += '&filterBy='
+
+    if country:
+        url += 'Country=' + country + ";"
+
+    if institution:
+        institution = institution.title()
+        url += 'Institution=' + institution + ";"
+
+    if institution_type:
+        url += 'Institution type=' + institution_type + ";"
+
+    req_obj = request(session, 'GET', url)
+    data_rows = [RATING_HEADINGS]
+    if req_obj.status_code == 200:
+        ratings = req_obj.json().get('list')
+        for user in ratings:
+            temp = []
+            temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
+            temp.append(user['username'])
+            temp.append(str(user['rating']))
+            temp.append(str(user['diff']))
+            data_rows.append(temp)
+        print_table(data_rows)
+    elif req_obj.status_code == 503:
+            print(SERVER_DOWN_MSG)
 
 
 def get_contests():
