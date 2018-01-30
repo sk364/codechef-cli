@@ -69,10 +69,10 @@ def create_parser():
                         help='Prints existing tags, if no argument passed. Pass tags as arguments \
                               to search problems in a particular tag. Eg: --tags <tag 1> <tag 2> \
                                ... <tag N>')
-    parser.add_argument('--ratings', required=False, action="store_true", help='displays the ratings of the users \
-                        that can be filtered with tags like --country, --institution, \
-                        --institution_type, --set and number of lines is decided with \
-                        --lines (value should be < 40) default value of which is 20')
+    parser.add_argument('--ratings', required=False, action="store_true", help='displays user \
+                        ratings. Can be filtered with tags like --country, --institution, \
+                        --institution_type, --set. Number of lines(<40) is decided with \
+                        --lines(default = 20)')
     parser.add_argument('--country', required=False, metavar='<country>',
                         help='provides country filter')
     parser.add_argument('--institution', required=False, metavar='<institution>',
@@ -147,7 +147,7 @@ def main():
             get_user(user)
 
         elif ratings:
-            get_ratings(country, institution, institution_type, lines, page)
+            get_ratings(country, institution, institution_type, page, lines)
 
         else:
             parser.print_help()

@@ -6,8 +6,10 @@ from pydoc import pager
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import (BASE_URL, RATING_HEADINGS, RESULT_CODES,
-                              SERVER_DOWN_MSG, PROBLEM_LIST_TABLE_HEADINGS)
+from .utils.constants import (BASE_URL, NUMBER_OF_LINES,
+                              PROBLEM_LIST_TABLE_HEADINGS,
+                              RATINGS_TABLE_HEADINGS, RESULT_CODES,
+                              SERVER_DOWN_MSG)
 from .utils.helpers import (bold, get_session, html_to_list,
                             print_inverse_table, print_table, request)
 
@@ -306,31 +308,30 @@ def print_problem_tags(tags):
         print(SERVER_DOWN_MSG)
 
 
-def get_ratings(country, institution, institution_type, lines, page):
+def get_ratings(country, institution, institution_type, page, lines):
     """
     :desc: displays the ratings of users. Result can be filtered according to
-    the country, institution, institution_type and sets. `line` decide the
-    number of lines to be shown. `page` tells which page of the result is to be shown
-    :param: values of all filters, lines to be displayed, page no. to be displayed
+           the country, institution, institution_type and sets. `line` decide the
+           number of lines to be shown. `page` tells which page of the result is to be shown
+    :param: `country` filter for users
+            `institution` filter for users
+            `institution_type` filter for users
     """
     session = get_session()
-    url = BASE_URL + '/api/ratings/all?sortBy=global_rank&order=asc&page='
-    url += str((page or 1)) + '&itemsPerPage=' + str((lines or 20))
-    if country or institution or institution_type:
-        url += '&filterBy='
-
+    url = BASE_URL + '/api/ratings/all?sortBy=global_rank&order=asc'
+    params = {}
+    params['page'] = str((page or 1))
+    params['itemsPerPage'] = str((lines or NUMBER_OF_LINES))
+    params['filterBy'] = ""
     if country:
-        url += 'Country=' + country + ";"
-
+        params['filterBy'] += 'Country=' + country + ";"
     if institution:
         institution = institution.title()
-        url += 'Institution=' + institution + ";"
-
+        params['filterBy'] += 'Institution=' + institution + ";"
     if institution_type:
-        url += 'Institution type=' + institution_type + ";"
-
-    req_obj = request(session, 'GET', url)
-    data_rows = [RATING_HEADINGS]
+        params['filterBy'] += 'Institution type=' + institution_type + ";"
+    req_obj = request(session, 'GET', url, params=params)
+    data_rows = [RATINGS_TABLE_HEADINGS]
     if req_obj.status_code == 200:
         ratings = req_obj.json().get('list')
         for user in ratings:
@@ -340,7 +341,10 @@ def get_ratings(country, institution, institution_type, lines, page):
             temp.append(str(user['rating']))
             temp.append(str(user['diff']))
             data_rows.append(temp)
-        print_table(data_rows)
+        if ratings == []:
+            print("Oops! we don't have data.")
+        else:
+            print_table(data_rows)
     elif req_obj.status_code == 503:
             print(SERVER_DOWN_MSG)
 
