@@ -3,8 +3,8 @@ import sys
 from getpass import getpass
 
 from .auth import login, logout
-from .problems import (get_contests, get_description, get_solution,
-                       get_solutions, get_tags, search_problems,
+from .problems import (get_contests, get_description, get_ratings,
+                       get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
 from .users import get_user
 
@@ -69,6 +69,20 @@ def create_parser():
                         help='Prints existing tags, if no argument passed. Pass tags as arguments \
                               to search problems in a particular tag. Eg: --tags <tag 1> <tag 2> \
                                ... <tag N>')
+    parser.add_argument('--ratings', required=False, action="store_true", help='displays user \
+                        ratings. Can be filtered with tags like --country, --institution, \
+                        --institution_type, --set. Number of lines(<40) is decided with \
+                        --lines(default = 20)')
+    parser.add_argument('--country', required=False, metavar='<country>',
+                        help='provides country filter')
+    parser.add_argument('--institution', required=False, metavar='<institution>',
+                        help='provides institution filter')
+    parser.add_argument('--institution_type', required=False, metavar='<institution_type>',
+                        choices=['School', 'Organization', 'College'],
+                        help='provides institution_type filter')
+    parser.add_argument('--lines', required=False, metavar='<Lines>',
+                        default=20, type=int, help='displays specified number \
+                        of lines, Default: 20')
     return parser
 
 
@@ -94,6 +108,12 @@ def main():
         solution_code = args['solution']
         language = args['language']
         result = args['result']
+        ratings = args['ratings']
+        country = args['country']
+        institution = args['institution']
+        institution_type = args['institution_type']
+        lines = args['lines']
+
         if username != '##no_login##':
             prompt('login', username=username)
             exit(0)
@@ -125,6 +145,9 @@ def main():
 
         elif user:
             get_user(user)
+
+        elif ratings:
+            get_ratings(country, institution, institution_type, page, lines)
 
         else:
             parser.print_help()
