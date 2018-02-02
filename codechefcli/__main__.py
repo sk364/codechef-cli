@@ -84,7 +84,6 @@ def create_parser():
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
 
-
     return parser
 
 
