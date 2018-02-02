@@ -11,7 +11,7 @@ from .utils.constants import (BASE_URL, NUMBER_OF_LINES,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
 from .utils.helpers import (bold, get_session, html_to_list,
-                            print_inverse_table, print_table, request)
+                            print_inverse_table, print_table, request, sort_data_rows)
 
 
 def get_description(problem_code, contest_code=None):
@@ -187,7 +187,7 @@ def submit_problem(problem_code, solution_file, language):
         print(SERVER_DOWN_MSG)
 
 
-def search_problems(search_type):
+def search_problems(search_type, sort):
     """
     :desc: Retrieves problems of the specific type.
     :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
@@ -209,7 +209,10 @@ def search_problems(search_type):
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
         data_rows = html_to_list(table_html)
-        print_table(data_rows)
+        if sort:
+            data_rows = sort_data_rows(data_rows, sort)
+        else:
+            print_table(data_rows)
 
         if is_contest:
             contest_timer_block = soup.find_all('div', attrs={'class': 'rounded-block'})[0]
@@ -238,7 +241,7 @@ def search_problems(search_type):
         print(SERVER_DOWN_MSG)
 
 
-def get_tags(tags):
+def get_tags(tags, sort):
     """
     :desc: Prints all tags or problems tagged with `tags`.
     :param: `tags` list of input tags
@@ -247,7 +250,7 @@ def get_tags(tags):
     if len(tags) == 0:
         print_tags()
     else:
-        print_problem_tags(tags)
+        print_problem_tags(tags, sort)
 
 
 def print_tags():
@@ -275,7 +278,7 @@ def print_tags():
         print(SERVER_DOWN_MSG)
 
 
-def print_problem_tags(tags):
+def print_problem_tags(tags, sort):
     """
     :desc: Prints problems tagged with `tags`.
     :params: `tags` list of input tags
@@ -303,12 +306,15 @@ def print_problem_tags(tags):
                 except TypeError:
                     problem_info.append('')
                 data_rows.append(problem_info)
-            print_table(data_rows)
+            if sort:
+                data_rows = sort_data_rows(data_rows, sort)
+            else:
+                print_table(data_rows)
     elif req_obj.status_code == 503:
         print(SERVER_DOWN_MSG)
 
 
-def get_ratings(country, institution, institution_type, page, lines):
+def get_ratings(country, institution, institution_type, page, lines ,sort):
     """
     :desc: displays the ratings of users. Result can be filtered according to
            the country, institution, institution_type and sets. `line` decide the
@@ -344,7 +350,10 @@ def get_ratings(country, institution, institution_type, page, lines):
         if ratings == []:
             print("Oops! we don't have data.")
         else:
-            print_table(data_rows)
+            if sort:
+                data_rows = sort_data_rows(data_rows, sort)
+            else:
+                print_table(data_rows)
     elif req_obj.status_code == 503:
             print(SERVER_DOWN_MSG)
 
@@ -372,7 +381,7 @@ def get_contests():
         print(SERVER_DOWN_MSG)
 
 
-def get_solutions(problem_code, page, language, result, username):
+def get_solutions(problem_code, page, language, result, username, sort):
     """
     :desc: Retrieves solutions list of a problem.
     :param: `problem_code` Code of the problem.
@@ -414,9 +423,12 @@ def get_solutions(problem_code, page, language, result, username):
                 cols = row.find_all('td')
                 cols[-1].extract()
             data_rows = html_to_list(str(solution_table))
-            print_table(data_rows)
-            if page_info:
-                print('\nPage: ' + page_info.text)
+            if sort:
+                data_rows = sort_data_rows(data_rows, sort)
+            else:
+                print_table(data_rows)
+                if page_info:
+                    print('\nPage: ' + page_info.text)
         else:
             print('Invalid Problem Code.')
     elif req_obj.status_code == 503:

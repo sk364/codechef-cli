@@ -51,6 +51,20 @@ def request(session, method, url, **kwargs):
         sys.exit(1)
 
 
+def sort_data_rows(data_rows, sort):
+    heading = data_rows[0]
+    data_rows = data_rows[1:]
+    index = -1
+    if sort.upper() in heading:
+        index = heading.index(sort.upper())
+        data_rows.sort(key=lambda x: x[index])
+        data_rows.insert(0,heading)
+        print_table(data_rows)
+    else:
+        data_rows.insert(0,heading)
+        print ("Wrong value to be sorted with. Your Choices are ", ','.join(data_rows[0]) )
+
+
 def html_to_list(table_html):
     """
     :desc: Converts the input html table to a 2D list that
@@ -62,6 +76,7 @@ def html_to_list(table_html):
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
     headings = [[row.text.strip() for row in th_tags]]
+    headings[0] = [x.upper() for x in headings[0]]
     data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
     return data_rows
 
