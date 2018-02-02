@@ -44,13 +44,13 @@ def create_parser():
     parser.add_argument('--logout', required=False, action='store_true')
     parser.add_argument('--problem', required=False, metavar='<Problem Code>',
                         help='Get Problem Description.')
-    parser.add_argument('--user', '-u', required=False, metavar='username',
+    parser.add_argument('--user', '-u', required=False, metavar='<Username>',
                         help='Get user information. This arg can also be used for filtering data.')
     parser.add_argument('--submit', nargs=3, required=False, metavar=('<Problem Code>',
                         '<Solution File Path>', '<Language>'), help='Eg: C++, C, Python, Python3, \
                         java, etc. (case-insensitive)')
-    parser.add_argument('--search', required=False, metavar='<type>',
-                        help='type is either school / easy / medium / hard / challenge / extcontest \
+    parser.add_argument('--search', required=False, metavar='<Type>',
+                        help='Type is either school / easy / medium / hard / challenge / extcontest \
                              / <contest code>. <contest code> examples - OCT17, COOK88.\
                              (case-insensitive)')
     parser.add_argument('--contests', required=False, action='store_true',
@@ -64,27 +64,26 @@ def create_parser():
     parser.add_argument('--language', required=False, help='Eg: C++, C, python3, java. This arg \
                         can also be used for filtering data. (case-insensitive)')
     parser.add_argument('--result', '-r', required=False, help='Result of the solution. Choices: \
-                        AC, WA, TLE, RTE, CTE. Default="ALL". (case-insensitive)')
-    parser.add_argument('--tags', required=False, nargs='*', metavar="<tags>",
-                        help='Prints existing tags, if no argument passed. Pass tags as arguments \
-                              to search problems in a particular tag. Eg: --tags <tag 1> <tag 2> \
-                               ... <tag N>')
-    parser.add_argument('--ratings', required=False, action="store_true", help='displays user \
-                        ratings. Can be filtered with tags like --country, --institution, \
-                        --institution_type, --set. Number of lines(<40) is decided with \
-                        --lines(default = 20)')
-    parser.add_argument('--country', required=False, metavar='<country>',
-                        help='provides country filter')
-    parser.add_argument('--institution', required=False, metavar='<institution>',
-                        help='provides institution filter')
-    parser.add_argument('--institution_type', required=False, metavar='<institution_type>',
+                        AC, WA, TLE, RTE, CTE. Default: "ALL". (case-insensitive)')
+    parser.add_argument('--tags', required=False, nargs='*', metavar="<Tag Name>",
+                        help='Prints existing tags, if no argument passed. Pass 1 or more tags as arguments \
+                        to search problems in a particular tag.')
+    parser.add_argument('--ratings', required=False, action="store_true", help='Displays user \
+                        ratings. Available filters: --country, --institution, --institution-type. \
+                        Limit output lines (<= 40) using --lines.')
+    parser.add_argument('--country', required=False, metavar='<Country>',
+                        help='Country filter. Eg: India, "United States", etc.')
+    parser.add_argument('--institution', required=False, metavar='<Institution>',
+                        help='Institution Filter. Eg: "Indian Institute of Information Technology, Design \
+                        and Manufacturing, Jabalpur"')
+    parser.add_argument('--institution-type', required=False, metavar='<Institution Type>',
                         choices=['School', 'Organization', 'College'],
-                        help='provides institution_type filter')
+                        help='Institution Type Filter')
     parser.add_argument('--lines', required=False, metavar='<Lines>',
-                        default=20, type=int, help='displays specified number \
-                        of lines, Default: 20')
+                        default=20, type=int, help='Limit number of lines in output. Default: 20')
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
+
 
     return parser
 
