@@ -11,7 +11,8 @@ from .utils.constants import (BASE_URL, NUMBER_OF_LINES,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
 from .utils.helpers import (bold, get_session, html_to_list,
-                            print_inverse_table, print_table, request, sort_data_rows)
+                            print_inverse_table, print_table, request,
+                            sort_data_rows)
 
 
 def get_description(problem_code, contest_code=None):
@@ -314,7 +315,7 @@ def print_problem_tags(tags, sort):
         print(SERVER_DOWN_MSG)
 
 
-def get_ratings(country, institution, institution_type, page, lines ,sort):
+def get_ratings(country, institution, institution_type, page, lines, sort):
     """
     :desc: displays the ratings of users. Result can be filtered according to
            the country, institution, institution_type and sets. `line` decide the

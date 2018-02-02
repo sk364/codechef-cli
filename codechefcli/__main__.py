@@ -84,7 +84,7 @@ def create_parser():
                         default=20, type=int, help='displays specified number \
                         of lines, Default: 20')
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
-                    help='utility argument to sort results of other arguments')
+                        help='utility argument to sort results of other arguments')
 
     return parser
 
@@ -117,7 +117,6 @@ def main():
         institution_type = args['institution_type']
         lines = args['lines']
         sort = args['sort']
-
 
         if username != '##no_login##':
             prompt('login', username=username)

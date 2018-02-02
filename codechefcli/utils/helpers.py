@@ -58,11 +58,11 @@ def sort_data_rows(data_rows, sort):
     if sort.upper() in heading:
         index = heading.index(sort.upper())
         data_rows.sort(key=lambda x: x[index])
-        data_rows.insert(0,heading)
+        data_rows.insert(0, heading)
         print_table(data_rows)
     else:
-        data_rows.insert(0,heading)
-        print ("Wrong value to be sorted with. Your Choices are ", ','.join(data_rows[0]) )
+        data_rows.insert(0, heading)
+        print("Wrong value to be sorted with. Your Choices are ", ','.join(data_rows[0]))
 
 
 def html_to_list(table_html):
