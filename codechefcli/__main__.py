@@ -7,6 +7,7 @@ from .problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
 from .users import get_user
+from .utils.helpers import print_response
 
 # Supporting input in Python 2/3
 try:
@@ -19,7 +20,6 @@ def prompt(action, *args, **kwargs):
     """
     :desc: Prompts the user corresponding to an action.
     :param: `action` Action name
-    :return: None
     """
 
     if action == 'login':
@@ -114,7 +114,7 @@ def main():
         institution = args['institution']
         institution_type = args['institution_type']
         lines = args['lines']
-        sort = args['sort']
+        resp = None
 
         if username != '##no_login##':
             prompt('login', username=username)
@@ -131,17 +131,17 @@ def main():
             submit_problem(*submit)
 
         elif search:
-            search_problems(search, sort)
+            resp = search_problems(search)
 
         elif contests:
             get_contests()
 
         elif tags or tags == []:
-                get_tags(tags, sort)
+            resp = get_tags(tags)
 
         elif solution_list_problem_code:
-            get_solutions(solution_list_problem_code, page, language, result, user, sort)
-
+            resp = get_solutions(solution_list_problem_code, page, language, result, user)
+            
         elif solution_code:
             get_solution(solution_code)
 
@@ -149,10 +149,13 @@ def main():
             get_user(user)
 
         elif ratings:
-            get_ratings(country, institution, institution_type, page, lines, sort)
+            resp = get_ratings(country, institution, institution_type, page, lines)
 
         else:
             parser.print_help()
+
+        if resp is not None:
+            print_response(**resp)
     except KeyboardInterrupt:
         print('\nBye.')
     sys.exit(0)

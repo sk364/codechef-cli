@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 
-from .constants import COOKIES_FILE_PATH, INTERNET_DOWN_MSG, USER_AGENT
+from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
+                        SERVER_DOWN_MSG, USER_AGENT)
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -128,11 +129,48 @@ def print_inverse_table(table_html):
     print(data_str)
 
 
-def bold(text):
+def color_text(text, color=None):
     """
-    :desc: Bold the text by transforming text with ascii codes.
-    :param: `text` Text to format.
-    :return: `str` Text with ascii codes.
+    :desc: Colors the text
     """
 
-    return '{0}{1}{2}'.format('\033[1m', text, '\033[0m')
+    if color is None:
+        return text
+
+    return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
+
+
+def print_response_util(data, extra, data_type, color):
+    """
+    :desc: Utility function to print text
+    """
+
+    if data is None and extra is None:
+        print(color_text('Nothing to show.', 'WARNING'))
+
+    if data is not None:
+        if data_type == 'table':
+            print_table(data)
+        elif data_type == 'text':
+            print(color_text(data, color))
+
+    if extra is not None:
+        print(color_text(extra, color))
+
+
+# TODO: Add robust validations on input `data`
+def print_response(data_type='text', code=200, data=None, extra=None):
+    """
+    :desc: Prints response to user.
+    :param: `data_type` Type of data
+            `data` Data to print
+            `extra` Extra messages to print
+            `code` Response code
+    """
+
+    if code == 503:
+        print_response_util(SERVER_DOWN_MSG, extra, data_type, 'FAIL')
+    elif code == 200:
+        print_response_util(data, extra, data_type, 'BLUE')
+    elif code == 404:
+        print_response_util(data, extra, data_type, 'WARNING')
