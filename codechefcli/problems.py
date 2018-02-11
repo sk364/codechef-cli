@@ -261,14 +261,17 @@ def print_tags():
     if req_obj.status_code == 200:
         all_tags = req_obj.json()
         data_rows = []
+        num_cols = 5
         row = []
 
-        for en, all_tag in enumerate(all_tags):
-            if ((en + 1) % 6 != 0):
-                row.append(all_tag['tag'])
+        for index, tag in enumerate(all_tags):
+            tag_name = tag.get('tag', '')
+            if len(row) < num_cols:
+                row.append(tag_name)
             else:
                 data_rows.append(row)
-                row = []
+                row = [tag_name]
+
         print_table(data_rows)
 
     elif req_obj.status_code == 503:
