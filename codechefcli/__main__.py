@@ -81,6 +81,9 @@ def create_parser():
                         help='Institution Type Filter')
     parser.add_argument('--lines', required=False, metavar='<Lines>',
                         default=20, type=int, help='Limit number of lines in output. Default: 20')
+    parser.add_argument('--sort', required=False, metavar='<sortBy>',
+                        help='utility argument to sort results of other arguments')
+
     return parser
 
 
@@ -111,6 +114,7 @@ def main():
         institution = args['institution']
         institution_type = args['institution_type']
         lines = args['lines']
+        sort = args['sort']
 
         if username != '##no_login##':
             prompt('login', username=username)
@@ -127,16 +131,16 @@ def main():
             submit_problem(*submit)
 
         elif search:
-            search_problems(search)
+            search_problems(search, sort)
 
         elif contests:
             get_contests()
 
         elif tags or tags == []:
-                get_tags(tags)
+                get_tags(tags, sort)
 
         elif solution_list_problem_code:
-            get_solutions(solution_list_problem_code, page, language, result, user)
+            get_solutions(solution_list_problem_code, page, language, result, user, sort)
 
         elif solution_code:
             get_solution(solution_code)
@@ -145,7 +149,7 @@ def main():
             get_user(user)
 
         elif ratings:
-            get_ratings(country, institution, institution_type, page, lines)
+            get_ratings(country, institution, institution_type, page, lines, sort)
 
         else:
             parser.print_help()
