@@ -1,7 +1,6 @@
 import os
 
 import requests
-
 from bs4 import BeautifulSoup
 
 from .decorators import login_required

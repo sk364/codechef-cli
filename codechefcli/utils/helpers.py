@@ -5,7 +5,6 @@ from pydoc import pager
 import requests
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
-
 from bs4 import BeautifulSoup
 
 from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
