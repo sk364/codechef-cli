@@ -5,7 +5,7 @@ from pydoc import pager
 
 from bs4 import BeautifulSoup
 
-from .decorators import login_required
+from .decorators import login_required, sort_it
 from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
@@ -320,8 +320,8 @@ def get_problem_tags(tags):
 
     return resp
 
-
-def get_ratings(country, institution, institution_type, page, lines, sort):
+@sort_it
+def get_ratings(sort, country, institution, institution_type, page, lines):
     """
     :desc: displays the ratings of users. Result can be filtered according to
            the country, institution, institution_type and sets. `line` decide the
@@ -360,7 +360,6 @@ def get_ratings(country, institution, institution_type, page, lines, sort):
             temp.append(str(user['rating']))
             temp.append(str(user['diff']))
             data_rows.append(temp)
-
         if len(ratings) == 0:
             resp = {
                 'code': '404',
@@ -375,7 +374,6 @@ def get_ratings(country, institution, institution_type, page, lines, sort):
             }
 
     return resp
-
 
 def get_contests():
     """

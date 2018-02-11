@@ -114,6 +114,7 @@ def main():
         institution = args['institution']
         institution_type = args['institution_type']
         lines = args['lines']
+        sort = args['sort']
         resp = None
 
         if username != '##no_login##':
@@ -137,11 +138,11 @@ def main():
             get_contests()
 
         elif tags or tags == []:
-            resp = get_tags(tags)
+            resp = get_tags(sort, tags)
 
         elif solution_list_problem_code:
-            resp = get_solutions(solution_list_problem_code, page, language, result, user)
-            
+            resp = get_solutions(sort, solution_list_problem_code, page, language, result, user)
+
         elif solution_code:
             get_solution(solution_code)
 
@@ -149,7 +150,7 @@ def main():
             get_user(user)
 
         elif ratings:
-            resp = get_ratings(country, institution, institution_type, page, lines)
+            resp = get_ratings(sort, country, institution, institution_type, page, lines)
 
         else:
             parser.print_help()
