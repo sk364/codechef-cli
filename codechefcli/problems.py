@@ -211,7 +211,11 @@ def search_problems(search_type):
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         table_html = str(soup.find_all('table')[1])
         data_rows = html_to_list(table_html)
-        resp = {'data_type': 'table','data': data_rows, 'code': 200}
+        resp = {
+            'data_type': 'table',
+            'data': data_rows,
+            'code': 200
+        }
 
         if is_contest:
             contest_timer_block = soup.find_all('div', attrs={'class': 'rounded-block'})[0]
@@ -229,8 +233,8 @@ def search_problems(search_type):
                 minutes = str((diff.seconds % 3600) // 60)
                 seconds = str((diff.seconds % 3600) % 60)
 
-                time_left_text = color_text('Contest ends in ', 'BOLD') + days + ' days, ' + hours + ' hours, ' +\
-                    minutes + ' minutes, ' + seconds + ' seconds.'
+                time_left_text = color_text('Contest ends in ', 'BOLD') + days + ' days, ' +\
+                    hours + ' hours, ' + minutes + ' minutes, ' + seconds + ' seconds.'
             else:
                 time_left_text = color_text('Contest ended.', 'BOLD')
 

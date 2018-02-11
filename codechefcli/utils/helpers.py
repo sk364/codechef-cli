@@ -3,9 +3,10 @@ import sys
 from pydoc import pager
 
 import requests
-from bs4 import BeautifulSoup
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
+
+from bs4 import BeautifulSoup
 
 from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
                         SERVER_DOWN_MSG, USER_AGENT)
