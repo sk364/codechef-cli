@@ -187,7 +187,8 @@ def submit_problem(problem_code, solution_file, language):
         print(SERVER_DOWN_MSG)
 
 
-def search_problems(search_type, sort):
+@sort_it
+def search_problems(sort, search_type):
     """
     :desc: Retrieves problems of the specific type.
     :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
@@ -243,7 +244,7 @@ def search_problems(search_type, sort):
     return resp
 
 
-def get_tags(tags, sort):
+def get_tags(sort, tags):
     """
     :desc: Prints all tags or problems tagged with `tags`.
     :param: `tags` list of input tags
@@ -252,7 +253,7 @@ def get_tags(tags, sort):
     if len(tags) == 0:
         return get_all_tags()
     else:
-        return get_problem_tags(tags)
+        return get_problem_tags(sort, tags)
 
 
 def get_all_tags():
@@ -283,7 +284,9 @@ def get_all_tags():
 
     return resp
 
-def get_problem_tags(tags):
+
+@sort_it
+def get_problem_tags(sort, tags):
     """
     :desc: Prints problems tagged with `tags`.
     :params: `tags` list of input tags
@@ -302,6 +305,7 @@ def get_problem_tags(tags):
         resp = {'code': 200}
 
         if all_tags == []:
+            resp['code'] = 404
             resp['extra'] = "Sorry, there are no problems with the following tags!"
         else:
             for key, value in all_tags.items():
@@ -319,6 +323,7 @@ def get_problem_tags(tags):
             resp['data_type'] = 'table'
 
     return resp
+
 
 @sort_it
 def get_ratings(sort, country, institution, institution_type, page, lines):
@@ -350,30 +355,36 @@ def get_ratings(sort, country, institution, institution_type, page, lines):
     resp = {'code': 503}
 
     if req_obj.status_code == 200:
-        ratings = req_obj.json().get('list')
-        data_rows = [RATINGS_TABLE_HEADINGS]
+        try:
+            ratings = req_obj.json().get('list')
+            data_rows = [RATINGS_TABLE_HEADINGS]
 
-        for user in ratings:
-            temp = []
-            temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
-            temp.append(user['username'])
-            temp.append(str(user['rating']))
-            temp.append(str(user['diff']))
-            data_rows.append(temp)
-        if len(ratings) == 0:
-            resp = {
-                'code': '404',
-                'data': 'Oops! we don\'t have data.',
-                'data_type': 'text'
-            }
-        else:
-            resp = {
-                'code': 200,
-                'data': data_rows,
-                'data_type': 'table'
-            }
+            for user in ratings:
+                temp = []
+                temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
+                temp.append(user['username'])
+                temp.append(str(user['rating']))
+                temp.append(str(user['diff']))
+                data_rows.append(temp)
+            if len(ratings) == 0:
+                resp = {
+                    'code': 404,
+                    'data': 'Oops! we don\'t have data.',
+                    'data_type': 'text'
+                }
+            else:
+                resp = {
+                    'code': 200,
+                    'data': data_rows,
+                    'data_type': 'table'
+                }
 
+            return resp
+        except TypeError:
+            # To fix the rating issue
+            return resp
     return resp
+
 
 def get_contests():
     """
@@ -398,7 +409,8 @@ def get_contests():
         print(SERVER_DOWN_MSG)
 
 
-def get_solutions(problem_code, page, language, result, username, sort):
+@sort_it
+def get_solutions(sort, problem_code, page, language, result, username):
     """
     :desc: Retrieves solutions list of a problem.
     :param: `problem_code` Code of the problem.

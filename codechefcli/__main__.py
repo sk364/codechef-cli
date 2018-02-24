@@ -132,7 +132,7 @@ def main():
             submit_problem(*submit)
 
         elif search:
-            resp = search_problems(search)
+            resp = search_problems(sort, search)
 
         elif contests:
             get_contests()

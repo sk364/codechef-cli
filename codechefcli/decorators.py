@@ -2,7 +2,7 @@ import os
 from functools import wraps
 
 from .utils.constants import COOKIES_FILE_PATH
-from .utils.helpers import print_table
+
 try:
     from http.cookiejar import LWPCookieJar
 except ImportError:
@@ -34,16 +34,16 @@ def login_required(func):
 
     return wrapper
 
+
 def sort_it(func):
     '''
     desc: decorator method to sort the specified argument
     '''
     def wrapper(*args, **kwargs):
         sort = args[0]
-        data_rows = func(*args,**kwargs)
-        if data_rows == -1:
-            exit
-        else:
+        resp = func(*args, **kwargs)
+        if resp['code'] == 200 and resp['data_type'] == 'table':
+            data_rows = resp['data']
             if sort:
                 heading = data_rows[0]
                 data_rows = data_rows[1:]
@@ -52,10 +52,13 @@ def sort_it(func):
                     index = heading.index(sort.upper())
                     data_rows.sort(key=lambda x: x[index])
                     data_rows.insert(0, heading)
-                    print_table(data_rows)
+                    resp['data'] = data_rows
                 else:
                     data_rows.insert(0, heading)
-                    print("Wrong value to be sorted with. Your Choices are ", ','.join(data_rows[0]))
-            else:
-                print_table(data_rows)
+                    resp = {
+                        'code': 404,
+                        'data': 'Wrong sorting argument entered',
+                        'data_type': 'text'
+                    }
+        return resp
     return wraps(func)(wrapper)
