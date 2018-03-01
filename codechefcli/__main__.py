@@ -84,14 +84,14 @@ def create_parser():
     return parser
 
 
-def main():
+def main(argv):
     """
     :desc: Entry point method
     """
 
     try:
         parser = create_parser()
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args(argv[1:]))
 
         username = args['login']
         is_logout = args['logout']
@@ -155,8 +155,8 @@ def main():
             print_response(**resp)
     except KeyboardInterrupt:
         print('\nBye.')
-    sys.exit(0)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))
