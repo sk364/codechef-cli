@@ -54,7 +54,6 @@ def sort_it(func):
                     data_rows.insert(0, heading)
                     resp['data'] = data_rows
                 else:
-                    data_rows.insert(0, heading)
                     resp = {
                         'code': 404,
                         'data': 'Wrong sorting argument entered',

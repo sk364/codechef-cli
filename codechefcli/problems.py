@@ -355,34 +355,30 @@ def get_ratings(sort, country, institution, institution_type, page, lines):
     resp = {'code': 503}
 
     if req_obj.status_code == 200:
-        try:
-            ratings = req_obj.json().get('list')
-            data_rows = [RATINGS_TABLE_HEADINGS]
+        ratings = req_obj.json().get('list')
+        data_rows = [RATINGS_TABLE_HEADINGS]
 
-            for user in ratings:
-                temp = []
-                temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
-                temp.append(user['username'])
-                temp.append(str(user['rating']))
-                temp.append(str(user['diff']))
-                data_rows.append(temp)
-            if len(ratings) == 0:
-                resp = {
-                    'code': 404,
-                    'data': 'Oops! we don\'t have data.',
-                    'data_type': 'text'
-                }
-            else:
-                resp = {
-                    'code': 200,
-                    'data': data_rows,
-                    'data_type': 'table'
-                }
+        for user in ratings:
+            temp = []
+            temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
+            temp.append(user['username'])
+            temp.append(str(user['rating']))
+            temp.append(str(user['diff']))
+            data_rows.append(temp)
+        if len(ratings) == 0:
+            resp = {
+                'code': 404,
+                'data': 'Oops! we don\'t have data.',
+                'data_type': 'text'
+            }
+        else:
+            resp = {
+                'code': 200,
+                'data': data_rows,
+                'data_type': 'table'
+            }
 
-            return resp
-        except TypeError:
-            # To fix the rating issue
-            return resp
+        return resp
     return resp
 
 
