@@ -111,7 +111,7 @@ def main(argv):
         institution = args['institution']
         institution_type = args['institution_type']
         lines = args['lines']
-        resp = None
+        resps = []
 
         if username != '##no_login##':
             prompt('login', username=username)
@@ -122,22 +122,22 @@ def main(argv):
             exit(0)
 
         elif problem_code:
-            get_description(problem_code, contest_code=search)
+            resps = get_description(problem_code, contest_code=search)
 
         elif submit:
-            submit_problem(*submit)
+            resps = submit_problem(*submit)
 
         elif search:
-            resp = search_problems(search)
+            resps = [search_problems(search)]
 
         elif contests:
             get_contests()
 
         elif tags or tags == []:
-            resp = get_tags(tags)
+            resps = [get_tags(tags)]
 
         elif solution_list_problem_code:
-            resp = get_solutions(solution_list_problem_code, page, language, result, user)
+            resps = [get_solutions(solution_list_problem_code, page, language, result, user)]
 
         elif solution_code:
             get_solution(solution_code)
@@ -146,12 +146,12 @@ def main(argv):
             get_user(user)
 
         elif ratings:
-            resp = get_ratings(country, institution, institution_type, page, lines)
+            resps = [get_ratings(country, institution, institution_type, page, lines)]
 
         else:
             parser.print_help()
 
-        if resp is not None:
+        for resp in resps:
             print_response(**resp)
     except KeyboardInterrupt:
         print('\nBye.')

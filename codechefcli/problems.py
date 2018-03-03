@@ -33,15 +33,35 @@ def get_description(problem_code, contest_code=None):
     if req_obj.status_code == 200:
         problem_html = req_obj.text
         soup = BeautifulSoup(problem_html, 'html.parser')
+        resps = []
+
         if soup.find(id='problem-code'):
             content = soup.find_all('div', class_='content')[1]
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
-            print(color_text('Problem Description: ', 'BOLD'))
-            pager(content.text)
-            print(content.text)
-            print('\n' + color_text('Problem Info: ', 'BOLD'))
-            print_inverse_table(str(soup.find_all('table')[2]))
+            problem_info_table = soup.find_all('table')[2]
+
+            resps = [{
+                'data_type': 'text',
+                'code': 200,
+                'data': color_text(color_text('Problem Description:', 'BOLD'), 'BLUE'),
+            }, {
+                'data_type': 'text',
+                'code': 200,
+                'data': content.text,
+                'pager': True
+            }, {
+                'data_type': 'text',
+                'code': 200,
+                'data': color_text(color_text('Problem Info:', 'BOLD'), 'BLUE')
+            }, {
+                'data_type': 'table',
+                'code': 200,
+                'data': str(problem_info_table),
+                'inverse': True
+            }]
+
+            return resps
         else:
             print('Problem not found.')
             if contest_code is None:
@@ -127,24 +147,31 @@ def submit_problem(problem_code, solution_file, language):
     :param: `problem_code` Code of the problem.
             `solution_file` Path of the solution file.
             `language` Language Name (eg. Python3, C++, etc.)
-    :return: None
+    :return: `resps` response information array
     """
 
     session = get_session()
     url = BASE_URL + '/submit/' + problem_code
     req_obj = request(session, 'GET', url)
+    resps = []
 
     if req_obj.status_code == 200:
         form_token = get_form_token(req_obj.text)
         language_code = get_language_code(req_obj.text, language)
+        if language_code is None:
+            return [{'code': 400, 'data': 'Invalid language.'}]
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
-        return
+        return [{'code': 503}]
 
     try:
         solution_file_obj = open(solution_file)
     except IOError:
-        print('Solution file not found. Please provide a valid path.')
+        resps = [{
+            'data_type': 'text',
+            'data': 'Solution file not found. Please provide a valid path.',
+            'code': 400
+        }]
+        return resps
 
     post_data = {
         'language': language_code,
@@ -157,8 +184,7 @@ def submit_problem(problem_code, solution_file, language):
     req_obj = request(session, 'POST', url, data=post_data,
                       files=post_files)
     if req_obj.status_code == 200:
-        print('Problem Submitted...')
-        print('Running code...\n')
+        print(color_text('Running code...\n', 'BLUE'))
 
         status_code = req_obj.url.split('/')[-1]
         url = BASE_URL + '/get_submission_status/' + status_code
@@ -172,19 +198,28 @@ def submit_problem(problem_code, solution_file, language):
             result_code = status_json['result_code']
 
             if result_code != 'wait':
+                resp = {'data_type': 'text', 'code': 200}
                 if result_code == 'compile':
-                    print(u'Compilation error.\n{0}'.format(get_compilation_error(status_code)))
+                    resp['data'] = color_text(u'Compilation error.\n{0}'.format(get_compilation_error(status_code)), 'FAIL')
                 elif result_code == 'runtime':
-                    print(u'Runtime error. {0}\n'.format(status_json['signal']))
+                    resp['data'] = color_text(u'Runtime error. {0}\n'.format(status_json['signal']), 'FAIL')
                 elif result_code == 'wrong':
-                    print('Wrong answer\n')
+                    resp['data'] = color_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':
-                    print('Correct answer\n')
+                    resp['data'] = 'Correct answer\n'
+
+                resps.append(resp)
+
                 data_rows = html_to_list(get_error_table(status_code))
-                print_table(data_rows)
-                break
+                resps.append({
+                    'data_type': 'table',
+                    'code': 200,
+                    'data': data_rows
+                })
+
+                return resps
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        return [{'code': 503}]
 
 
 def search_problems(search_type):
@@ -247,6 +282,7 @@ def get_tags(tags):
     """
     :desc: Prints all tags or problems tagged with `tags`.
     :param: `tags` list of input tags
+    :return: `resp` response information dict
     """
 
     if len(tags) == 0:
@@ -258,6 +294,7 @@ def get_tags(tags):
 def get_all_tags():
     """
     :desc: Prints all tags.
+    :return: `resp` response information dict
     """
 
     session = get_session()
