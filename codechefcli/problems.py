@@ -1,7 +1,6 @@
 import math
 import re
 from datetime import datetime
-from pydoc import pager
 
 from bs4 import BeautifulSoup
 
@@ -10,8 +9,8 @@ from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
-from .utils.helpers import (color_text, get_session, html_to_list,
-                            print_inverse_table, print_table, request)
+from .utils.helpers import (color_text, get_session, html_to_list, print_table,
+                            request)
 
 
 def get_description(problem_code, contest_code=None):
@@ -200,9 +199,13 @@ def submit_problem(problem_code, solution_file, language):
             if result_code != 'wait':
                 resp = {'data_type': 'text', 'code': 200}
                 if result_code == 'compile':
-                    resp['data'] = color_text(u'Compilation error.\n{0}'.format(get_compilation_error(status_code)), 'FAIL')
+                    error_msg = get_compilation_error(status_code)
+                    compile_error_msg = u'Compilation error.\n{0}'.format(error_msg)
+                    resp['data'] = color_text(compile_error_msg, 'FAIL')
                 elif result_code == 'runtime':
-                    resp['data'] = color_text(u'Runtime error. {0}\n'.format(status_json['signal']), 'FAIL')
+                    error_msg = status_json['signal']
+                    runtime_error_msg = u'Runtime error. {0}\n'.format(error_msg)
+                    resp['data'] = color_text(runtime_error_msg, 'FAIL')
                 elif result_code == 'wrong':
                     resp['data'] = color_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':

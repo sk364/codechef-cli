@@ -147,7 +147,7 @@ def print_response_util(data, extra, data_type, color, is_pager=False, inverse=F
                 print_table(data)
         elif data_type == 'text':
             if is_pager:
-                pager(color_text(data,color))
+                pager(color_text(data, color))
             print(color_text(data, color))
 
     if extra is not None:
