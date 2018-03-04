@@ -27,8 +27,7 @@ def login_required(func):
                 os.remove(COOKIES_FILE_PATH)
 
         if not is_login:
-            print('You are not logged in.')
-            return None
+            return [{'code': 401}]
         else:
             return func(*args, **kwargs)
 

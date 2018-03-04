@@ -8,7 +8,7 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 
 from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
-                        SERVER_DOWN_MSG, USER_AGENT)
+                        SERVER_DOWN_MSG, UNAUTHORIZED_MSG, USER_AGENT)
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -171,5 +171,8 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
         color = 'FAIL'
     elif code == 404:
         color = 'WARNING'
+    elif code == 401:
+        color = 'FAIL'
+        data = UNAUTHORIZED_MSG
 
     print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)

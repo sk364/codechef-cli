@@ -59,17 +59,16 @@ def get_description(problem_code, contest_code=None):
                 'data': str(problem_info_table),
                 'inverse': True
             }]
-
-            return resps
         else:
-            print('Problem not found.')
+            resps.append({'data': 'Problem not found.', 'code': 404})
             if contest_code is None:
-                print('Maybe, the problem exists only in the contest.\n'
-                      'Add "--search <contest code>" to search in the contest '
-                      'specific problems.')
+                resps.append({'data': 'Maybe, the problem exists only in the contest.\n'
+                      'Add ' + color_text("--search <contest code>", 'BOLD') +
+                      ' to search in the contest specific problems.'})
+        return resps
 
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        return [{'code': 503}]
 
 
 def get_form_token(problem_submit_html):
