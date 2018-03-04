@@ -7,6 +7,7 @@ from .problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
 from .users import get_user
+from .utils.constants import INVALID_USERNAME
 from .utils.helpers import print_response
 
 # Supporting input in Python 2/3
@@ -40,7 +41,7 @@ def create_parser():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
-                        default='##no_login##')
+                        default=INVALID_USERNAME)
     parser.add_argument('--logout', required=False, action='store_true')
     parser.add_argument('--problem', required=False, metavar='<Problem Code>',
                         help='Get Problem Description.')
@@ -116,7 +117,7 @@ def main(argv):
         skip_past_contests = args.skip_past_contests
         resps = []
 
-        if username != '##no_login##':
+        if username != INVALID_USERNAME:
             resps = prompt('login', username=username)
 
         elif is_logout:
