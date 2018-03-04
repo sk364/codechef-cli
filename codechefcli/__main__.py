@@ -141,10 +141,10 @@ def main(argv):
             resps = [get_solutions(solution_list_problem_code, page, language, result, user)]
 
         elif solution_code:
-            get_solution(solution_code)
+            resps = get_solution(solution_code)
 
         elif user:
-            get_user(user)
+            resps = get_user(user)
 
         elif ratings:
             resps = [get_ratings(country, institution, institution_type, page, lines)]

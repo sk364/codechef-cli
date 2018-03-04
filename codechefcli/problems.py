@@ -519,11 +519,13 @@ def get_solution(solution_code):
     """
     :desc: Retrieves a solution
     :param: `solution_code` Code of the solution.
+    :return: `resps` response information array
     """
 
     session = get_session(fake_browser=True)
     url = BASE_URL + '/viewsolution/' + solution_code
     req_obj = request(session, 'GET', url)
+    resps = []
 
     if req_obj.status_code == 200:
         if 'Solution: ' + solution_code in req_obj.text:
@@ -537,12 +539,23 @@ def get_solution(solution_code):
             for li in lis:
                 code += li.text + '\n'
 
-            print('\n' + color_text('Solution:', 'BOLD') + '\n')
-            print(code)
-            print('\n' + color_text('Submission Info:', 'BOLD') + '\n')
+            headings = '\n' + color_text('Solution:', 'BOLD') + '\n' +\
+                       code + '\n' + color_text('Submission Info:', 'BOLD') + '\n'
+            resps.append({
+                'data': headings,
+                'pager': True
+            })
+
             data_rows = html_to_list(str(status_table))
-            print_table(data_rows)
+            resps.append({
+                'data': data_rows,
+                'data_type': 'table'
+            })
         else:
-            print('Invalid Solution Code.')
+            resps = [{'data': 'Invalid Solution Code.', 'code': 404}]
+    elif req_obj.status_code == 403:
+        resps = [{'code': 400, 'data': 'Access Denied!'}]
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        resps = [{'code': 503}]
+
+    return resps
