@@ -87,14 +87,14 @@ def create_parser():
     return parser
 
 
-def main():
+def main(argv):
     """
     :desc: Entry point method
     """
 
     try:
         parser = create_parser()
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args(argv[1:]))
 
         username = args['login']
         is_logout = args['logout']
@@ -115,7 +115,7 @@ def main():
         institution_type = args['institution_type']
         lines = args['lines']
         sort = args['sort']
-        resp = None
+        resps = []
 
         if username != '##no_login##':
             prompt('login', username=username)
@@ -126,22 +126,22 @@ def main():
             exit(0)
 
         elif problem_code:
-            get_description(problem_code, contest_code=search)
+            resps = get_description(problem_code, contest_code=search)
 
         elif submit:
-            submit_problem(*submit)
+            resps = submit_problem(*submit)
 
         elif search:
-            resp = search_problems(sort, search)
+            resps = [search_problems(sort, search)]
 
         elif contests:
             get_contests()
 
         elif tags or tags == []:
-            resp = get_tags(sort, tags)
+            resps = [get_tags(sort, tags)]
 
         elif solution_list_problem_code:
-            resp = get_solutions(sort, solution_list_problem_code, page, language, result, user)
+            resps = [get_solutions(sort, solution_list_problem_code, page, language, result, user)]
 
         elif solution_code:
             get_solution(solution_code)
@@ -150,17 +150,17 @@ def main():
             get_user(user)
 
         elif ratings:
-            resp = get_ratings(sort, country, institution, institution_type, page, lines)
+            resps = [get_ratings(sort, country, institution, institution_type, page, lines)]
 
         else:
             parser.print_help()
 
-        if resp is not None:
+        for resp in resps:
             print_response(**resp)
     except KeyboardInterrupt:
         print('\nBye.')
-    sys.exit(0)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))

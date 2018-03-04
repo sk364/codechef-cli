@@ -59,6 +59,9 @@ def html_to_list(table_html):
     :param: `table_html` HTML text contaning <table> tag
     """
 
+    if not table_html:
+        return []
+
     soup = BeautifulSoup(table_html, 'html.parser')
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
@@ -73,6 +76,9 @@ def print_table(data_rows):
     :desc: Prints data in tabular format.
     :param: `table_html` HTML text containing <table> tag.
     """
+
+    if len(data_rows) == 0:
+        return
 
     num_cols = len(data_rows[0])
     max_len_in_cols = [0] * num_cols
@@ -126,7 +132,7 @@ def color_text(text, color=None):
     return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
 
 
-def print_response_util(data, extra, data_type, color):
+def print_response_util(data, extra, data_type, color, is_pager=False, inverse=False):
     """
     :desc: Utility function to print text
     """
@@ -136,8 +142,13 @@ def print_response_util(data, extra, data_type, color):
 
     if data is not None:
         if data_type == 'table':
-            print_table(data)
+            if inverse:
+                print_inverse_table(data)
+            else:
+                print_table(data)
         elif data_type == 'text':
+            if is_pager:
+                pager(color_text(data, color))
             print(color_text(data, color))
 
     if extra is not None:
@@ -145,7 +156,7 @@ def print_response_util(data, extra, data_type, color):
 
 
 # TODO: Add robust validations on input `data`
-def print_response(data_type='text', code=200, data=None, extra=None):
+def print_response(data_type='text', code=200, data=None, extra=None, pager=False, inverse=False):
     """
     :desc: Prints response to user.
     :param: `data_type` Type of data
@@ -154,9 +165,12 @@ def print_response(data_type='text', code=200, data=None, extra=None):
             `code` Response code
     """
 
+    color = None
+
     if code == 503:
-        print_response_util(SERVER_DOWN_MSG, extra, data_type, 'FAIL')
-    elif code == 200:
-        print_response_util(data, extra, data_type, 'BLUE')
+        data = SERVER_DOWN_MSG
+        color = 'FAIL'
     elif code == 404:
-        print_response_util(data, extra, data_type, 'WARNING')
+        color = 'WARNING'
+
+    print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
