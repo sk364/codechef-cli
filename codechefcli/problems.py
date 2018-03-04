@@ -422,11 +422,13 @@ def get_ratings(country, institution, institution_type, page, lines):
 def get_contests():
     """
     :desc: Retrieves contests.
+    :return: `resps` response information array
     """
 
     session = get_session()
     url = BASE_URL + '/contests'
     req_obj = request(session, 'GET', url)
+    resps = []
 
     if req_obj.status_code == 200:
         soup = BeautifulSoup(req_obj.text, 'html.parser')
@@ -434,12 +436,19 @@ def get_contests():
         labels = ['Present', 'Future', 'Past']
 
         for i in range(1, 4):
-            print(color_text(labels[i-1] + ' Contests:\n', 'BOLD'))
+            resps.append({
+                'data': color_text(labels[i-1] + ' Contests:\n', 'BOLD')
+            })
+
             data_rows = html_to_list(str(tables[i]))
-            print_table(data_rows)
-            print('\n')
+            resps.append({
+                'data': data_rows,
+                'data_type': 'table'
+            })
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        resps = [{'code': 503}]
+
+    return resps
 
 
 def get_solutions(problem_code, page, language, result, username):

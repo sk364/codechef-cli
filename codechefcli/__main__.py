@@ -129,7 +129,7 @@ def main(argv):
             resps = [search_problems(search)]
 
         elif contests:
-            get_contests()
+            resps = get_contests()
 
         elif tags or tags == []:
             resps = [get_tags(tags)]
