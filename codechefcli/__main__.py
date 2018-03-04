@@ -118,8 +118,7 @@ def main(argv):
             exit(0)
 
         elif is_logout:
-            logout()
-            exit(0)
+            resps = logout()
 
         elif problem_code:
             resps = get_description(problem_code, contest_code=search)

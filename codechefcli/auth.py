@@ -88,7 +88,7 @@ def logout(session=None):
     """
     :desc: Logout a user. Delete the cookies.
     :param: `session` Existing session to logout from.
-    :return: None
+    :return: `resps` response information dict
     """
 
     session = session or get_session()
@@ -96,8 +96,8 @@ def logout(session=None):
     req_obj = request(session, 'GET', url)
 
     if req_obj.status_code == 200:
-        print('Successfully logged out.')
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
+        return [{'data': 'Successfully logged out.'}]
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        return [{'code': 503}]
