@@ -29,7 +29,7 @@ def prompt(action, *args, **kwargs):
             username = kwargs['username']
 
         password = getpass()
-        login(username, password)
+        return login(username, password)
 
 
 def create_parser():
@@ -114,8 +114,7 @@ def main(argv):
         resps = []
 
         if username != '##no_login##':
-            prompt('login', username=username)
-            exit(0)
+            resps = prompt('login', username=username)
 
         elif is_logout:
             resps = logout()

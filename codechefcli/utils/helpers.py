@@ -169,7 +169,7 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
     if code == 503:
         data = SERVER_DOWN_MSG
         color = 'FAIL'
-    elif code == 404:
+    elif code == 404 or code == 400:
         color = 'WARNING'
     elif code == 401:
         color = 'FAIL'
