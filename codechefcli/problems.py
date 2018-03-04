@@ -9,8 +9,7 @@ from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
-from .utils.helpers import (color_text, get_session, html_to_list, print_table,
-                            request)
+from .utils.helpers import color_text, get_session, html_to_list, request
 
 
 def get_description(problem_code, contest_code=None):
