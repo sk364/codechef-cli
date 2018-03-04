@@ -81,6 +81,8 @@ def create_parser():
                         help='Institution Type Filter')
     parser.add_argument('--lines', required=False, metavar='<Lines>',
                         default=20, type=int, help='Limit number of lines in output. Default: 20')
+    parser.add_argument('--skip-past-contests', required=False, action='store_true',
+                        help='Skips printing past contests.')
     return parser
 
 
@@ -91,26 +93,27 @@ def main(argv):
 
     try:
         parser = create_parser()
-        args = vars(parser.parse_args(argv[1:]))
+        args = parser.parse_args(argv[1:])
 
-        username = args['login']
-        is_logout = args['logout']
-        problem_code = args['problem']
-        user = args['user']
-        submit = args['submit']
-        search = args['search']
-        contests = args['contests']
-        tags = args['tags']
-        page = args['page']
-        solution_list_problem_code = args['solutions']
-        solution_code = args['solution']
-        language = args['language']
-        result = args['result']
-        ratings = args['ratings']
-        country = args['country']
-        institution = args['institution']
-        institution_type = args['institution_type']
-        lines = args['lines']
+        username = args.login
+        is_logout = args.logout
+        problem_code = args.problem
+        user = args.user
+        submit = args.submit
+        search = args.search
+        contests = args.contests
+        tags = args.tags
+        page = args.page
+        solution_list_problem_code = args.solutions
+        solution_code = args.solution
+        language = args.language
+        result = args.result
+        ratings = args.ratings
+        country = args.country
+        institution = args.institution
+        institution_type = args.institution_type
+        lines = args.lines
+        skip_past_contests = args.skip_past_contests
         resps = []
 
         if username != '##no_login##':
@@ -129,7 +132,7 @@ def main(argv):
             resps = [search_problems(search)]
 
         elif contests:
-            resps = get_contests()
+            resps = get_contests(skip_past_contests)
 
         elif tags or tags == []:
             resps = [get_tags(tags)]

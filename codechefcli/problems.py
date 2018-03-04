@@ -419,9 +419,10 @@ def get_ratings(country, institution, institution_type, page, lines):
     return resp
 
 
-def get_contests():
+def get_contests(skip_past_contests):
     """
     :desc: Retrieves contests.
+    :param: `skip_past_contests` Skips printing past contests, if True
     :return: `resps` response information array
     """
 
@@ -434,8 +435,9 @@ def get_contests():
         soup = BeautifulSoup(req_obj.text, 'html.parser')
         tables = soup.find_all('table')
         labels = ['Present', 'Future', 'Past']
+        limit = 3 if skip_past_contests else 4
 
-        for i in range(1, 4):
+        for i in range(1, limit):
             resps.append({
                 'data': color_text(labels[i-1] + ' Contests:\n', 'BOLD')
             })
