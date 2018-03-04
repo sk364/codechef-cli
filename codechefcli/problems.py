@@ -62,9 +62,11 @@ def get_description(problem_code, contest_code=None):
         else:
             resps.append({'data': 'Problem not found.', 'code': 404})
             if contest_code is None:
-                resps.append({'data': 'Maybe, the problem exists only in the contest.\n'
-                      'Add ' + color_text("--search <contest code>", 'BOLD') +
-                      ' to search in the contest specific problems.'})
+                resps.append({
+                    'data': 'Maybe, the problem exists only in the contest.\n'
+                            'Add ' + color_text("--search <contest code>", 'BOLD') +
+                            ' to search in the contest specific problems.'
+                })
         return resps
 
     elif req_obj.status_code == 503:
