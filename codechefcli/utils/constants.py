@@ -27,3 +27,4 @@ BCOLORS = {
     'BOLD': '\033[1m',
     'UNDERLINE': '\033[4m'
 }
+INVALID_USERNAME = '##no_login##'

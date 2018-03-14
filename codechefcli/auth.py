@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, COOKIES_FILE_PATH, SERVER_DOWN_MSG
+from .utils.constants import BASE_URL, COOKIES_FILE_PATH
 from .utils.helpers import get_session, request
 
 try:
@@ -35,13 +35,50 @@ def get_other_active_sessions(session_limit_html):
     return (action, {inp['name']: inp['value'] for inp in inputs})
 
 
+def disconnect_sessions(session, disconnect_form_html):
+    """
+    :desc: Disconnects session when session limit exceeded.
+    :param: `session` requests.Session object.
+            `disconnect_form_html` form containing list of active sessions.
+    :return: `resps` response information dict
+    """
+
+    save_cookies = False
+    resps = []
+
+    print('Session limit exceeded!')
+    proceed = input('You need to disconnect other sessions to continue.\n'
+                    'Do you want to disconnect other sessions? [Y/n] ')
+
+    if proceed == 'Y' or proceed == '' or proceed == 'y':
+        action, other_active_sessions = get_other_active_sessions(disconnect_form_html)
+        disconnect_url = BASE_URL + action
+        disconnect_req_obj = request(session, 'POST', disconnect_url,
+                                     data=other_active_sessions)
+
+        if disconnect_req_obj.status_code == 200:
+            resps = [{'data': 'Disconnected other sessions.\nSuccessfully logged in.'}]
+            save_cookies = True
+        elif disconnect_req_obj.status_code == 503:
+            resps = [{'code': 503}]
+    else:
+        resps = logout(session=session)
+
+    return resps, save_cookies
+
+
 def login(username, password):
     """
     :desc: Logs a user in. Can disconnect sessions if session limit is exceeded.
     :param: `username` Username of the user
             `password` Password of the user
-    :return: None
+    :return: `resps` response information dict
     """
+
+    resps = [{
+        'data': 'Username/Password field cannot be left blank.',
+        'code': 400
+    }]
 
     if username and password:
         data = {'name': username, 'pass': password, 'form_id': 'new_login_form'}
@@ -52,35 +89,19 @@ def login(username, password):
 
             if req_obj.status_code == 200:
                 if 'Session limit exceeded' in req_obj.text:
-                    print('Session limit exceeded!')
-                    proceed = input('You need to disconnect other sessions to continue.\
-                                     Do you want to disconnect other sessions? [Y/n] ')
-                    if proceed == 'Y' or proceed == '' or proceed == 'y':
-                        action, other_active_sessions = get_other_active_sessions(req_obj.text)
-                        disconnect_url = BASE_URL + action
-                        disconnect_req_obj = request(session, 'POST', disconnect_url,
-                                                     data=other_active_sessions)
-
-                        if disconnect_req_obj.status_code == 200:
-                            print('Disconnected other sessions.\nSuccessfully logged in.')
-                            save_cookies = True
-                        elif req_obj.status_code == 503:
-                            print(SERVER_DOWN_MSG)
-                    else:
-                        logout(session=session)
+                    resps, save_cookies = disconnect_sessions(session, req_obj.text)
                 elif 'Logout' in req_obj.text:
-                    print('Successfully logged in!')
+                    resps = [{'data': 'Successfully logged in!'}]
                     save_cookies = True
                 else:
-                    print('Incorrect Credentials!')
+                    resps = [{'data': 'Incorrect Credentials!', 'code': 400}]
 
                 if save_cookies:
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
                     session.cookies.save(ignore_expires=True, ignore_discard=True)
             elif req_obj.status_code == 503:
-                print(SERVER_DOWN_MSG)
-    else:
-        print('Username/Password field left blank. Please try again!')
+                resps = [{'code': 503}]
+    return resps
 
 
 @login_required
@@ -88,7 +109,7 @@ def logout(session=None):
     """
     :desc: Logout a user. Delete the cookies.
     :param: `session` Existing session to logout from.
-    :return: None
+    :return: `resps` response information dict
     """
 
     session = session or get_session()
@@ -96,8 +117,8 @@ def logout(session=None):
     req_obj = request(session, 'GET', url)
 
     if req_obj.status_code == 200:
-        print('Successfully logged out.')
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
+        return [{'data': 'Successfully logged out.'}]
     elif req_obj.status_code == 503:
-        print(SERVER_DOWN_MSG)
+        return [{'code': 503}]

@@ -7,6 +7,7 @@ from .problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
 from .users import get_user
+from .utils.constants import INVALID_USERNAME
 from .utils.helpers import print_response
 
 # Supporting input in Python 2/3
@@ -29,7 +30,7 @@ def prompt(action, *args, **kwargs):
             username = kwargs['username']
 
         password = getpass()
-        login(username, password)
+        return login(username, password)
 
 
 def create_parser():
@@ -40,7 +41,7 @@ def create_parser():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
-                        default='##no_login##')
+                        default=INVALID_USERNAME)
     parser.add_argument('--logout', required=False, action='store_true')
     parser.add_argument('--problem', required=False, metavar='<Problem Code>',
                         help='Get Problem Description.')
@@ -81,9 +82,10 @@ def create_parser():
                         help='Institution Type Filter')
     parser.add_argument('--lines', required=False, metavar='<Lines>',
                         default=20, type=int, help='Limit number of lines in output. Default: 20')
+    parser.add_argument('--skip-past-contests', required=False, action='store_true',
+                        help='Skips printing past contests.')
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
-
     return parser
 
 
@@ -94,37 +96,35 @@ def main(argv):
 
     try:
         parser = create_parser()
-        args = vars(parser.parse_args(argv[1:]))
+        args = parser.parse_args(argv[1:])
 
-        username = args['login']
-        is_logout = args['logout']
-        problem_code = args['problem']
-        user = args['user']
-        submit = args['submit']
-        search = args['search']
-        contests = args['contests']
-        tags = args['tags']
-        page = args['page']
-        solution_list_problem_code = args['solutions']
-        solution_code = args['solution']
-        language = args['language']
-        result = args['result']
-        ratings = args['ratings']
-        country = args['country']
-        institution = args['institution']
-        institution_type = args['institution_type']
-        lines = args['lines']
-        sort = args['sort']
-
+        username = args.login
+        is_logout = args.logout
+        problem_code = args.problem
+        user = args.user
+        submit = args.submit
+        search = args.search
+        contests = args.contests
+        tags = args.tags
+        page = args.page
+        solution_list_problem_code = args.solutions
+        solution_code = args.solution
+        language = args.language
+        result = args.result
+        ratings = args.ratings
+        country = args.country
+        institution = args.institution
+        institution_type = args.institution_type
+        lines = args.lines
+        skip_past_contests = args.skip_past_contests
+        sort = args.sort
         resps = []
 
-        if username != '##no_login##':
-            prompt('login', username=username)
-            exit(0)
+        if username != INVALID_USERNAME:
+            resps = prompt('login', username=username)
 
         elif is_logout:
-            logout()
-            exit(0)
+            resps = logout()
 
         elif problem_code:
             resps = get_description(problem_code, contest_code=search)
@@ -136,7 +136,7 @@ def main(argv):
             resps = [search_problems(sort, search)]
 
         elif contests:
-            get_contests()
+            resps = get_contests(skip_past_contests)
 
         elif tags or tags == []:
             resps = [get_tags(sort, tags)]
@@ -145,10 +145,10 @@ def main(argv):
             resps = [get_solutions(sort, solution_list_problem_code, page, language, result, user)]
 
         elif solution_code:
-            get_solution(solution_code)
+            resps = get_solution(solution_code)
 
         elif user:
-            get_user(user)
+            resps = get_user(user)
 
         elif ratings:
             resps = [get_ratings(sort, country, institution, institution_type, page, lines)]
