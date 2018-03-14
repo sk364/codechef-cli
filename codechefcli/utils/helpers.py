@@ -30,7 +30,6 @@ def get_session(fake_browser=False):
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
         session.cookies.load(ignore_discard=True, ignore_expires=True)
-
     return session
 
 

@@ -49,7 +49,17 @@ def sort_it(func):
                 index = -1
                 if sort.upper() in heading:
                     index = heading.index(sort.upper())
-                    data_rows.sort(key=lambda x: x[index])
+                    if data_rows[1][index].isdigit():
+                        for data_row in data_rows:
+                            if data_row[index].isdigit():
+                                data_row[index] = int(data_row[index])
+                            else:
+                                data_row[index] = 0
+                        data_rows.sort(key=lambda x: x[index])
+                        for data_row in data_rows:
+                            data_row[index] = str(data_row[index])
+                    else:
+                        data_rows.sort(key=lambda x: x[index])
                     data_rows.insert(0, heading)
                     resp['data'] = data_rows
                 else:

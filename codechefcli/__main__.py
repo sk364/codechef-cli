@@ -115,6 +115,7 @@ def main(argv):
         institution_type = args['institution_type']
         lines = args['lines']
         sort = args['sort']
+
         resps = []
 
         if username != '##no_login##':
