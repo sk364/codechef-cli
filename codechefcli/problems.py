@@ -8,7 +8,7 @@ from .decorators import login_required, sort_it
 from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
-                              SERVER_DOWN_MSG)
+                              SERVER_DOWN_MSG, EDITORIAL_BASE_URL)
 from .utils.helpers import color_text, get_session, html_to_list, request
 
 
@@ -70,6 +70,35 @@ def get_description(problem_code, contest_code=None):
 
     elif req_obj.status_code == 503:
         return [{'code': 503}]
+
+
+def get_editorial(editorial_problem):
+    """
+    :desc: Gets the editorial of specified problem.
+    :param: `editorial_problem` Code of the problem.
+    """
+    session = get_session()
+    url = EDITORIAL_BASE_URL + '/problems/' + editorial_problem
+    req_obj = request(session, 'GET', url)
+    resps = []
+    if req_obj.status_code == 200:
+        soup = BeautifulSoup(req_obj.text, 'html.parser')
+        editorial = soup.find('div', attrs={'class': 'question-body'})
+        # pager(editorial.text)
+        # print_description(editorial)
+        resps = [{
+            'data_type': 'text',
+            'code': 200,
+            'data': color_text(color_text('Editorial', 'BOLD'), 'BLUE'),
+        }, {
+            'data_type': 'text',
+            'code': 200,
+            'data': editorial.text,
+            'pager': True
+        }]
+    elif req_obj.status_code == 404:
+        resps.append({'data': 'Problem not found!!', 'code': 404})
+    return resps
 
 
 def get_form_token(problem_submit_html):
