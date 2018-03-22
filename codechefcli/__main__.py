@@ -86,8 +86,8 @@ def create_parser():
                         help='Skips printing past contests.')
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
-    parser.add_argument('--order', required=False, metavar='<order>',
-                        help='utility argument to specify the sorting order; default:ASCENDING')
+    parser.add_argument('--order', required=False, metavar='<order>', default='asc',
+                        help='utility argument to specify the sorting order; asc` for ascending;`dec` for descending' )
 
     return parser
 

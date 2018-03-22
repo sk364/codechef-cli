@@ -52,8 +52,6 @@ def sort_it(func):
                     'data_type': 'text'
                 }
                 return resp
-        else:
-            order = False
         resp = func(*args, **kwargs)
         if resp['code'] == 200 and resp['data_type'] == 'table':
             data_rows = resp['data']
