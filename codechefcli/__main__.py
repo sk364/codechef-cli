@@ -5,7 +5,7 @@ from getpass import getpass
 from .auth import login, logout
 from .problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
-                       submit_problem, get_editorial)
+                       submit_problem)
 from .users import get_user
 from .utils.constants import INVALID_USERNAME
 from .utils.helpers import print_response
@@ -86,8 +86,9 @@ def create_parser():
                         help='Skips printing past contests.')
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
-    parser.add_argument('--editorial', required=False, metavar='<problem_code>',
-                    help='Get editorial of specified problem.')
+    parser.add_argument('--order', required=False, metavar='<order>',
+                        help='utility argument to specify the sorting order; default:ASCENDING')
+
     return parser
 
 
@@ -120,7 +121,7 @@ def main(argv):
         lines = args.lines
         skip_past_contests = args.skip_past_contests
         sort = args.sort
-        editorial_problem = args.editorial
+        order = args.order
         resps = []
 
         if username != INVALID_USERNAME:
@@ -136,16 +137,17 @@ def main(argv):
             resps = submit_problem(*submit)
 
         elif search:
-            resps = [search_problems(sort, search)]
+            resps = [search_problems(sort, order, search)]
 
         elif contests:
             resps = get_contests(skip_past_contests)
 
         elif tags or tags == []:
-            resps = [get_tags(sort, tags)]
+            resps = [get_tags(sort, order, tags)]
 
         elif solution_list_problem_code:
-            resps = [get_solutions(sort, solution_list_problem_code, page, language, result, user)]
+            resps = [get_solutions(sort, order, solution_list_problem_code,
+                     page, language, result, user)]
 
         elif solution_code:
             resps = get_solution(solution_code)
@@ -154,10 +156,7 @@ def main(argv):
             resps = get_user(user)
 
         elif ratings:
-            resps = [get_ratings(sort, country, institution, institution_type, page, lines)]
-
-        elif editorial_problem:
-            resps = get_editorial(editorial_problem)
+            resps = [get_ratings(sort, order, country, institution, institution_type, page, lines)]
 
         else:
             parser.print_help()

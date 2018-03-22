@@ -8,7 +8,7 @@ from .decorators import login_required, sort_it
 from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
-                              SERVER_DOWN_MSG, EDITORIAL_BASE_URL)
+                              SERVER_DOWN_MSG)
 from .utils.helpers import color_text, get_session, html_to_list, request
 
 
@@ -70,35 +70,6 @@ def get_description(problem_code, contest_code=None):
 
     elif req_obj.status_code == 503:
         return [{'code': 503}]
-
-
-def get_editorial(editorial_problem):
-    """
-    :desc: Gets the editorial of specified problem.
-    :param: `editorial_problem` Code of the problem.
-    """
-    session = get_session()
-    url = EDITORIAL_BASE_URL + '/problems/' + editorial_problem
-    req_obj = request(session, 'GET', url)
-    resps = []
-    if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        editorial = soup.find('div', attrs={'class': 'question-body'})
-        # pager(editorial.text)
-        # print_description(editorial)
-        resps = [{
-            'data_type': 'text',
-            'code': 200,
-            'data': color_text(color_text('Editorial', 'BOLD'), 'BLUE'),
-        }, {
-            'data_type': 'text',
-            'code': 200,
-            'data': editorial.text,
-            'pager': True
-        }]
-    elif req_obj.status_code == 404:
-        resps.append({'data': 'Problem not found!!', 'code': 404})
-    return resps
 
 
 def get_form_token(problem_submit_html):
@@ -255,7 +226,7 @@ def submit_problem(problem_code, solution_file, language):
 
 
 @sort_it
-def search_problems(sort, search_type):
+def search_problems(sort, order, search_type):
     """
     :desc: Retrieves problems of the specific type.
     :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
@@ -311,7 +282,7 @@ def search_problems(sort, search_type):
     return resp
 
 
-def get_tags(sort, tags):
+def get_tags(sort, order, tags):
     """
     :desc: Prints all tags or problems tagged with `tags`.
     :param: `tags` list of input tags
@@ -321,7 +292,7 @@ def get_tags(sort, tags):
     if len(tags) == 0:
         return get_all_tags()
     else:
-        return get_problem_tags(sort, tags)
+        return get_problem_tags(sort, order, tags)
 
 
 def get_all_tags():
@@ -355,7 +326,7 @@ def get_all_tags():
 
 
 @sort_it
-def get_problem_tags(sort, tags):
+def get_problem_tags(sort, order, tags):
     """
     :desc: Prints problems tagged with `tags`.
     :params: `tags` list of input tags
@@ -395,7 +366,7 @@ def get_problem_tags(sort, tags):
 
 
 @sort_it
-def get_ratings(sort, country, institution, institution_type, page, lines):
+def get_ratings(sort, order, country, institution, institution_type, page, lines):
     """
     :desc: displays the ratings of users. Result can be filtered according to
            the country, institution, institution_type and sets. `line` decide the
@@ -486,7 +457,7 @@ def get_contests(skip_past_contests):
 
 
 @sort_it
-def get_solutions(sort, problem_code, page, language, result, username):
+def get_solutions(sort, order, problem_code, page, language, result, username):
     """
     :desc: Retrieves solutions list of a problem.
     :param: `problem_code` Code of the problem.

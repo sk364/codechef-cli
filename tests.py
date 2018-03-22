@@ -22,4 +22,3 @@ class ScriptTests(unittest.TestCase):
         parser = entry_point.create_parser()
         args = parser.parse_args(['--problem', 'WEICOM'])
         self.assertEqual(args.problem, 'WEICOM')
- 

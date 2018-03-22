@@ -40,6 +40,20 @@ def sort_it(func):
     '''
     def wrapper(*args, **kwargs):
         sort = args[0]
+        if args[1]:
+            if args[1] == 'asc':
+                order = False
+            elif args[1] == 'dec':
+                order = True
+            else:
+                resp = {
+                    'code': 404,
+                    'data': 'Wrong order argument entered',
+                    'data_type': 'text'
+                }
+                return resp
+        else:
+            order = False
         resp = func(*args, **kwargs)
         if resp['code'] == 200 and resp['data_type'] == 'table':
             data_rows = resp['data']
@@ -55,11 +69,11 @@ def sort_it(func):
                                 data_row[index] = int(data_row[index])
                             else:
                                 data_row[index] = 0
-                        data_rows.sort(key=lambda x: x[index])
+                        data_rows.sort(key=lambda x: x[index], reverse=order)
                         for data_row in data_rows:
                             data_row[index] = str(data_row[index])
                     else:
-                        data_rows.sort(key=lambda x: x[index])
+                        data_rows.sort(key=lambda x: x[index], reverse=order)
                     data_rows.insert(0, heading)
                     resp['data'] = data_rows
                 else:
