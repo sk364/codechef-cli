@@ -40,10 +40,11 @@ def sort_it(func):
     '''
     def wrapper(*args, **kwargs):
         sort = args[0]
-        if args[1]:
-            if args[1] == 'asc':
+        orderType = args[1]
+        if orderType:
+            if orderType == 'asc':
                 order = False
-            elif args[1] == 'desc':
+            elif orderType == 'desc':
                 order = True
             else:
                 resp = {

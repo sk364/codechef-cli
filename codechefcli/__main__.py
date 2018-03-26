@@ -87,8 +87,8 @@ def create_parser():
     parser.add_argument('--sort', required=False, metavar='<sortBy>',
                         help='utility argument to sort results of other arguments')
     parser.add_argument('--order', required=False, metavar='<order>', default='asc',
-                        help='utility argument to specify the sorting order; asc` for ascending; \
-                        `desc` for descending')
+                        help='utility argument to specify the sorting order; default: ascending \
+                        `asc` for ascending; `desc` for descending')
     return parser
 
 
