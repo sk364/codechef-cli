@@ -93,6 +93,7 @@ def login(username, password, disconnect_sessions):
                     resps = [{'data': LOGIN_SUCCESS_MSG}]
                 else:
                     resps = [{'data': INCORRECT_CREDS_MSG, 'code': 400}]
+                    save_cookies = False
 
                 if save_cookies:
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
