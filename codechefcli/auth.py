@@ -4,7 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from .decorators import login_required
-from .utils.constants import BASE_URL, COOKIES_FILE_PATH
+from .utils.constants import (BASE_URL, COOKIES_FILE_PATH, EMPTY_AUTH_DATA_MSG,
+                              INCORRECT_CREDS_MSG, LOGIN_SUCCESS_MSG,
+                              LOGOUT_SUCCESS_MSG, SESSION_LIMIT_MSG)
 from .utils.helpers import get_session, request
 
 try:
@@ -46,7 +48,7 @@ def disconnect_sessions(session, disconnect_form_html):
     save_cookies = False
     resps = []
 
-    print('Session limit exceeded!')
+    print(SESSION_LIMIT_MSG)
     proceed = input('You need to disconnect other sessions to continue.\n'
                     'Do you want to disconnect other sessions? [Y/n] ')
 
@@ -76,7 +78,7 @@ def login(username, password):
     """
 
     resps = [{
-        'data': 'Username/Password field cannot be left blank.',
+        'data': EMPTY_AUTH_DATA_MSG,
         'code': 400
     }]
 
@@ -91,10 +93,10 @@ def login(username, password):
                 if 'Session limit exceeded' in req_obj.text:
                     resps, save_cookies = disconnect_sessions(session, req_obj.text)
                 elif 'Logout' in req_obj.text:
-                    resps = [{'data': 'Successfully logged in!'}]
+                    resps = [{'data': LOGIN_SUCCESS_MSG}]
                     save_cookies = True
                 else:
-                    resps = [{'data': 'Incorrect Credentials!', 'code': 400}]
+                    resps = [{'data': INCORRECT_CREDS_MSG, 'code': 400}]
 
                 if save_cookies:
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
@@ -119,6 +121,6 @@ def logout(session=None):
     if req_obj.status_code == 200:
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
-        return [{'data': 'Successfully logged out.'}]
+        return [{'data': LOGOUT_SUCCESS_MSG}]
     elif req_obj.status_code == 503:
         return [{'code': 503}]
