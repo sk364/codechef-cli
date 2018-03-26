@@ -30,7 +30,9 @@ def prompt(action, *args, **kwargs):
             username = kwargs['username']
 
         password = getpass()
-        return login(username, password)
+        disconnect_sessions = kwargs.get('disconnect_sessions', False)
+
+        return login(username, password, disconnect_sessions)
 
 
 def create_parser():
@@ -43,6 +45,9 @@ def create_parser():
     parser.add_argument('--login', '-l', required=False, nargs='?', metavar='username',
                         default=INVALID_USERNAME)
     parser.add_argument('--logout', required=False, action='store_true')
+    parser.add_argument('--disconnect-sessions', required=False, action='store_true',
+                        default=False, help='Disconnects active sessions, \
+                                             when session limit exceeded.')
     parser.add_argument('--problem', required=False, metavar='<Problem Code>',
                         help='Get Problem Description.')
     parser.add_argument('--user', '-u', required=False, metavar='<Username>',
@@ -98,6 +103,7 @@ def main(argv):
 
         username = args.login
         is_logout = args.logout
+        disconnect_sessions = args.disconnect_sessions
         problem_code = args.problem
         user = args.user
         submit = args.submit
@@ -118,7 +124,7 @@ def main(argv):
         resps = []
 
         if username != INVALID_USERNAME:
-            resps = prompt('login', username=username)
+            resps = prompt('login', username=username, disconnect_sessions=disconnect_sessions)
 
         elif is_logout:
             resps = logout()
