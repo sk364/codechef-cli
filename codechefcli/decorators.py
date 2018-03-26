@@ -43,7 +43,7 @@ def sort_it(func):
         if args[1]:
             if args[1] == 'asc':
                 order = False
-            elif args[1] == 'dec':
+            elif args[1] == 'desc':
                 order = True
             else:
                 resp = {
@@ -52,6 +52,8 @@ def sort_it(func):
                     'data_type': 'text'
                 }
                 return resp
+        else:
+            order = "asc"
         resp = func(*args, **kwargs)
         if resp['code'] == 200 and resp['data_type'] == 'table':
             data_rows = resp['data']
