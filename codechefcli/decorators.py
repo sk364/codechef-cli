@@ -16,17 +16,17 @@ def login_required(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        is_login = False
+        is_logged_in = False
         if os.path.exists(COOKIES_FILE_PATH):
             cookiejar = LWPCookieJar(filename=COOKIES_FILE_PATH)
             cookiejar.load()
 
             if len(cookiejar):
-                is_login = True
+                is_logged_in = True
             else:
                 os.remove(COOKIES_FILE_PATH)
 
-        if not is_login:
+        if is_logged_in is False:
             return [{'code': 401}]
         else:
             return func(*args, **kwargs)
