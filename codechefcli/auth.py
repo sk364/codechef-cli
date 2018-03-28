@@ -10,9 +10,9 @@ from .utils.constants import (BASE_URL, COOKIES_FILE_PATH, EMPTY_AUTH_DATA_MSG,
 from .utils.helpers import get_session, request
 
 try:
-    from http.cookiejar import LWPCookieJar
+    from http.cookiejar import Cookie, LWPCookieJar
 except ImportError:
-    from cookielib import LWPCookieJar
+    from cookielib import Cookie, LWPCookieJar
 
 
 # Supporting input in Python 2/3
@@ -96,7 +96,20 @@ def login(username, password, disconnect_sessions):
                     save_cookies = False
 
                 if save_cookies:
+                    # store username in session cookies
+                    username_cookie = Cookie(version=0, name='username', value=username, port=None,
+                                             port_specified=False, domain='www.codechef.com',
+                                             domain_specified=False, domain_initial_dot=False,
+                                             path='/', path_specified=True, secure=False,
+                                             expires=None, discard=False, comment=None,
+                                             comment_url=None, rest={'HttpOnly': None},
+                                             rfc2109=False)
+                    session.cookies.set_cookie(username_cookie)
+
+                    # clear `login_logout` cookie
                     session.cookies.clear('www.codechef.com', '/', 'login_logout')
+
+                    # save cookies, ignoring expired as well as discard cookies
                     session.cookies.save(ignore_expires=True, ignore_discard=True)
             elif req_obj.status_code == 503:
                 resps = [{'code': 503}]
