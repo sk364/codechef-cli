@@ -30,7 +30,6 @@ def get_session(fake_browser=False):
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
         session.cookies.load(ignore_discard=True, ignore_expires=True)
-
     return session
 
 
@@ -81,6 +80,7 @@ def html_to_list(table_html):
     rows = soup.find('table').find_all('tr')
     th_tags = rows[0].find_all('th')
     headings = [[row.text.strip() for row in th_tags]]
+    headings[0] = [x.upper() for x in headings[0]]
     data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
     return data_rows
 

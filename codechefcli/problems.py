@@ -4,7 +4,7 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
-from .decorators import login_required
+from .decorators import login_required, sort_it
 from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
@@ -225,7 +225,8 @@ def submit_problem(problem_code, solution_file, language):
         return [{'code': 503}]
 
 
-def search_problems(search_type):
+@sort_it
+def search_problems(sort, order, search_type):
     """
     :desc: Retrieves problems of the specific type.
     :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
@@ -281,7 +282,7 @@ def search_problems(search_type):
     return resp
 
 
-def get_tags(tags):
+def get_tags(sort, order, tags):
     """
     :desc: Prints all tags or problems tagged with `tags`.
     :param: `tags` list of input tags
@@ -291,7 +292,7 @@ def get_tags(tags):
     if len(tags) == 0:
         return get_all_tags()
     else:
-        return get_problem_tags(tags)
+        return get_problem_tags(sort, order, tags)
 
 
 def get_all_tags():
@@ -324,7 +325,8 @@ def get_all_tags():
     return resp
 
 
-def get_problem_tags(tags):
+@sort_it
+def get_problem_tags(sort, order, tags):
     """
     :desc: Prints problems tagged with `tags`.
     :params: `tags` list of input tags
@@ -343,6 +345,7 @@ def get_problem_tags(tags):
         resp = {'code': 200}
 
         if all_tags == []:
+            resp['code'] = 404
             resp['extra'] = "Sorry, there are no problems with the following tags!"
         else:
             for key, value in all_tags.items():
@@ -362,7 +365,8 @@ def get_problem_tags(tags):
     return resp
 
 
-def get_ratings(country, institution, institution_type, page, lines):
+@sort_it
+def get_ratings(sort, order, country, institution, institution_type, page, lines):
     """
     :desc: displays the ratings of users. Result can be filtered according to
            the country, institution, institution_type and sets. `line` decide the
@@ -401,10 +405,9 @@ def get_ratings(country, institution, institution_type, page, lines):
             temp.append(str(user['rating']))
             temp.append(str(user['diff']))
             data_rows.append(temp)
-
         if len(ratings) == 0:
             resp = {
-                'code': '404',
+                'code': 404,
                 'data': 'Oops! we don\'t have data.',
                 'data_type': 'text'
             }
@@ -415,6 +418,7 @@ def get_ratings(country, institution, institution_type, page, lines):
                 'data_type': 'table'
             }
 
+        return resp
     return resp
 
 
@@ -452,7 +456,8 @@ def get_contests(skip_past_contests):
     return resps
 
 
-def get_solutions(problem_code, page, language, result, username):
+@sort_it
+def get_solutions(sort, order, problem_code, page, language, result, username):
     """
     :desc: Retrieves solutions list of a problem.
     :param: `problem_code` Code of the problem.

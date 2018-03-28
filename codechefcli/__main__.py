@@ -89,6 +89,11 @@ def create_parser():
                         default=20, type=int, help='Limit number of lines in output. Default: 20')
     parser.add_argument('--skip-past-contests', required=False, action='store_true',
                         help='Skips printing past contests.')
+    parser.add_argument('--sort', required=False, metavar='<sortBy>',
+                        help='utility argument to sort results of other arguments')
+    parser.add_argument('--order', required=False, metavar='<order>', default='asc',
+                        help='utility argument to specify the sorting order; default: ascending \
+                        `asc` for ascending; `desc` for descending')
     return parser
 
 
@@ -121,6 +126,8 @@ def main(argv):
         institution_type = args.institution_type
         lines = args.lines
         skip_past_contests = args.skip_past_contests
+        sort = args.sort
+        order = args.order
         resps = []
 
         if username != INVALID_USERNAME:
@@ -136,16 +143,17 @@ def main(argv):
             resps = submit_problem(*submit)
 
         elif search:
-            resps = [search_problems(search)]
+            resps = [search_problems(sort, order, search)]
 
         elif contests:
             resps = get_contests(skip_past_contests)
 
         elif tags or tags == []:
-            resps = [get_tags(tags)]
+            resps = [get_tags(sort, order, tags)]
 
         elif solution_list_problem_code:
-            resps = [get_solutions(solution_list_problem_code, page, language, result, user)]
+            resps = [get_solutions(sort, order, solution_list_problem_code,
+                     page, language, result, user)]
 
         elif solution_code:
             resps = get_solution(solution_code)
@@ -154,7 +162,7 @@ def main(argv):
             resps = get_user(user)
 
         elif ratings:
-            resps = [get_ratings(country, institution, institution_type, page, lines)]
+            resps = [get_ratings(sort, order, country, institution, institution_type, page, lines)]
 
         else:
             parser.print_help()
