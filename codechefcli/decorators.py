@@ -39,48 +39,51 @@ def sort_it(func):
     desc: decorator method to sort the specified argument
     '''
     def wrapper(*args, **kwargs):
-        sort = args[0]
-        orderType = args[1]
-        if orderType:
-            if orderType == 'asc':
-                order = False
-            elif orderType == 'desc':
-                order = True
-            else:
-                resp = {
-                    'code': 404,
-                    'data': 'Wrong order argument entered',
-                    'data_type': 'text'
-                }
-                return resp
-        else:
-            order = "asc"
+        sort = args[0] and args[0].upper()
+        order_type = args[1]
+
         resp = func(*args, **kwargs)
         if resp['code'] == 200 and resp['data_type'] == 'table':
-            data_rows = resp['data']
-            if sort:
-                heading = data_rows[0]
-                data_rows = data_rows[1:]
-                index = -1
-                if sort.upper() in heading:
-                    index = heading.index(sort.upper())
-                    if data_rows[1][index].isdigit():
-                        for data_row in data_rows:
-                            if data_row[index].isdigit():
-                                data_row[index] = int(data_row[index])
-                            else:
-                                data_row[index] = 0
-                        data_rows.sort(key=lambda x: x[index], reverse=order)
-                        for data_row in data_rows:
-                            data_row[index] = str(data_row[index])
+            if sort is not None:
+                all_rows = resp['data']
+                heading = all_rows[0]
+                data_rows = all_rows[1:]
+
+                if sort in heading:
+                    index = heading.index(sort)
+
+                    if order_type in ['asc', 'desc']:
+                        reverse = False
+
+                        if order_type == 'desc':
+                            reverse = True
+
+                        if data_rows[1][index].isdigit():
+                            for data_row in data_rows:
+                                if data_row[index].isdigit():
+                                    data_row[index] = int(data_row[index])
+                                else:
+                                    data_row[index] = 0
+
+                            data_rows.sort(key=lambda x: x[index], reverse=reverse)
+
+                            for data_row in data_rows:
+                                data_row[index] = str(data_row[index])
+                        else:
+                            data_rows.sort(key=lambda x: x[index], reverse=reverse)
+
+                        data_rows.insert(0, heading)
+                        resp['data'] = data_rows
                     else:
-                        data_rows.sort(key=lambda x: x[index], reverse=order)
-                    data_rows.insert(0, heading)
-                    resp['data'] = data_rows
+                        resp = {
+                            'code': 404,
+                            'data': 'Wrong order argument entered.',
+                            'data_type': 'text'
+                        }
                 else:
                     resp = {
                         'code': 404,
-                        'data': 'Wrong sorting argument entered',
+                        'data': 'Wrong sorting argument entered.',
                         'data_type': 'text'
                     }
         return resp

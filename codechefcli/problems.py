@@ -515,6 +515,8 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
                 'data': INVALID_PROBLEM_CODE_MSG,
                 'data_type': 'text'
             }
+    elif req_obj.status_code == 503:
+        resp = {'code': 503}
 
     return resp
 
