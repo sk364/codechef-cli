@@ -34,6 +34,21 @@ def get_session(fake_browser=False):
     return session
 
 
+def get_username():
+    """
+    :desc: Retrieves username from session cookies.
+    :return: `string` username value or `None` if doesn't exist.
+    """
+
+    session = get_session()
+
+    for index, cookie in enumerate(session.cookies):
+        if cookie.name == 'username':
+            return cookie.value
+
+    return None
+
+
 def request(session, method, url, **kwargs):
     """
     :desc: Custom wrapper method to add a timeout message
