@@ -97,10 +97,13 @@ def create_parser():
     return parser
 
 
-def main(argv):
+def main(argv=None):
     """
     :desc: Entry point method
     """
+
+    if argv is None:
+        argv = sys.argv
 
     try:
         parser = create_parser()
