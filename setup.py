@@ -22,7 +22,7 @@ setup(
     install_requires=['BeautifulSoup4', 'requests'],
     python_requires='>=2.7',
     requires=['BeautifulSoup4', 'requests'],
-    version='0.3.1',
+    version='0.3.2',
     url='http://www.github.com/sk364/codechef-cli',
     keywords="codechefcli codechef cli programming",
     license='GNU',
