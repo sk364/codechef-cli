@@ -191,3 +191,6 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
         data = UNAUTHORIZED_MSG
 
     print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
+
+    
+    #My changes.
