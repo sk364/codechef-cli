@@ -7,6 +7,7 @@ from .problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
 from .users import get_user
+from .teams import get_team
 from .utils.constants import INVALID_USERNAME
 from .utils.helpers import print_response
 
@@ -94,6 +95,8 @@ def create_parser():
     parser.add_argument('--order', required=False, metavar='<order>', default='asc',
                         help='utility argument to specify the sorting order; default: ascending \
                         `asc` for ascending; `desc` for descending')
+    parser.add_argument('--team', required=False, metavar='<TeamName>',
+                        help='Get team information.')
     return parser
 
 
@@ -131,6 +134,7 @@ def main(argv=None):
         skip_past_contests = args.skip_past_contests
         sort = args.sort
         order = args.order
+        team = args.team
         resps = []
 
         if username != INVALID_USERNAME:
@@ -166,6 +170,9 @@ def main(argv=None):
 
         elif ratings:
             resps = [get_ratings(sort, order, country, institution, institution_type, page, lines)]
+
+        elif team:
+            resps = get_team(team)
 
         else:
             parser.print_help()
