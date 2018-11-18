@@ -8,6 +8,7 @@ from .problems import (get_contests, get_description, get_ratings,
                        submit_problem)
 from .teams import get_team
 from .users import get_user
+from .teams import get_team
 from .utils.constants import INVALID_USERNAME
 from .utils.helpers import print_response
 
