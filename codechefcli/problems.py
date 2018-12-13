@@ -39,8 +39,13 @@ def get_description(problem_code, contest_code=None, download_image=False):
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
             if(download_image):
-                img = content.find('img')
-                file_path = check_download_images(img['src'], problem_code)
+                images = content.find_all('img')
+                file_paths = []
+                count=1
+                for image in images:
+                    file_path = check_download_images(image['src'], problem_code, item=count)
+                    file_paths.append(file_path)
+                    count+=1
             problem_info_table = soup.find_all('table')[2]
 
             resps = [{
@@ -63,12 +68,12 @@ def get_description(problem_code, contest_code=None, download_image=False):
                 'inverse': True
             }]
 
-            if(download_image and file_path != '' or file_path != SERVER_DOWN_MSG):
+            if(download_image and len(file_paths) != 0):
                 resps.append(
                     {
                         'data_type': 'image_path',
                         'code': 200,
-                        'data': file_path
+                        'data': file_paths
                     }
                 )
         else:

@@ -166,8 +166,11 @@ def print_response_util(data, extra, data_type, color, is_pager=False, inverse=F
                 pager(color_text(data, color))
             print(color_text(data, color))
         elif data_type == 'image_path':
-            img = Image.open(data)
-            img.show()
+            for file_path in data:
+                if file_path != SERVER_DOWN_MSG:
+                    img = Image.open(file_path)
+                    if img is not None:
+                        img.show()
 
     if extra is not None:
         print(color_text(extra, color))
@@ -197,7 +200,7 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
     print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
 
 
-def check_download_images(image_url, problem_code):
+def check_download_images(image_url, problem_code, item=1):
     """
     :desc: Downloads the Image if it doesnot exist already
     :param: `image_url` Url of the image to download
@@ -206,7 +209,7 @@ def check_download_images(image_url, problem_code):
 
     url = image_url
     dot_split_url = url.split('.')
-    filename = problem_code+'.'+dot_split_url[-1]
+    filename = problem_code+'_'+str(item)+'.'+dot_split_url[-1]
     image_dir = os.getcwd() + "/" + IMAGE_DIR
     if(not os.path.isdir(image_dir)):
         #Make the directory
