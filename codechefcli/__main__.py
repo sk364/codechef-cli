@@ -140,7 +140,9 @@ def main(argv=None):
             resps = logout()
 
         elif problem_code:
-            resps = get_description(problem_code, contest_code=search)
+            response = input("Do you want to download images related to problems?[y/n]")
+            user_res = True if response == 'y' else False
+            resps = get_description(problem_code, contest_code=search, download_image=user_res)
 
         elif submit:
             resps = submit_problem(*submit)

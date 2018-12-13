@@ -7,6 +7,7 @@ flake8==3.5.0
 idna==2.6
 isort==4.2.15
 mccabe==0.6.1
+pillow
 pluggy==0.6.0
 py==1.5.2
 pycodestyle==2.3.1

@@ -9,10 +9,10 @@ from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
-from .utils.helpers import color_text, get_session, html_to_list, request
+from .utils.helpers import color_text, get_session, html_to_list, request, check_download_images
 
 
-def get_description(problem_code, contest_code=None):
+def get_description(problem_code, contest_code=None, download_image=False):
     """
     :desc: Retrieves a particular problem description.
     :param: `problem_code` Code of the problem.
@@ -32,11 +32,15 @@ def get_description(problem_code, contest_code=None):
         problem_html = req_obj.text
         soup = BeautifulSoup(problem_html, 'html.parser')
         resps = []
+        file_path = ""
 
         if soup.find(id='problem-code'):
             content = soup.find_all('div', class_='content')[1]
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
+            if(download_image):
+                img = content.find('img')
+                file_path = check_download_images(img['src'], problem_code)
             problem_info_table = soup.find_all('table')[2]
 
             resps = [{
@@ -58,6 +62,15 @@ def get_description(problem_code, contest_code=None):
                 'data': str(problem_info_table),
                 'inverse': True
             }]
+
+            if(download_image and file_path != '' or file_path != SERVER_DOWN_MSG):
+                resps.append(
+                    {
+                        'data_type': 'image_path',
+                        'code': 200,
+                        'data': file_path
+                    }
+                )
         else:
             resps.append({'data': 'Problem not found.', 'code': 404})
             if contest_code is None:

@@ -1,6 +1,7 @@
 import os
 import sys
 from pydoc import pager
+from PIL import Image
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,7 +9,7 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 
 from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
-                        SERVER_DOWN_MSG, UNAUTHORIZED_MSG, USER_AGENT)
+                        SERVER_DOWN_MSG, UNAUTHORIZED_MSG, USER_AGENT, IMAGE_DIR)
 
 try:
     from http.cookiejar import LWPCookieJar
@@ -164,6 +165,9 @@ def print_response_util(data, extra, data_type, color, is_pager=False, inverse=F
             if is_pager:
                 pager(color_text(data, color))
             print(color_text(data, color))
+        elif data_type == 'image_path':
+            img = Image.open(data)
+            img.show()
 
     if extra is not None:
         print(color_text(extra, color))
@@ -191,3 +195,43 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
         data = UNAUTHORIZED_MSG
 
     print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
+
+
+def check_download_images(image_url, problem_code):
+    """
+    :desc: Downloads the Image if it doesnot exist already
+    :param: `image_url` Url of the image to download
+            `problem_code` Problem Code of the problem
+    """
+
+    url = image_url
+    dot_split_url = url.split('.')
+    filename = problem_code+'.'+dot_split_url[-1]
+    image_dir = os.getcwd() + "/" + IMAGE_DIR
+    if(not os.path.isdir(image_dir)):
+        #Make the directory
+        try:
+            os.mkdir(image_dir)
+        except OSError:
+            print("Error creating directory")
+    file_path = image_dir + "/" + filename
+
+    if(not os.path.exists(file_path)):
+        session = get_session()
+
+        req_obj = request(session, 'GET', image_url)
+
+        if(req_obj.status_code == 200):
+
+            with open(file_path, 'wb') as handle:
+                for block in req_obj.iter_content(1024):
+                    if not block:
+                        break
+
+                    handle.write(block)
+
+
+        if req_obj.status_code == 503:
+            return SERVER_DOWN_MSG
+
+    return file_path
