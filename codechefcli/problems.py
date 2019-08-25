@@ -40,7 +40,7 @@ def get_description(problem_code, contest_code=None):
             while content.find('img'):
                 img = content.find('img')
                 img.name = "p"
-                img.string  = img['src']
+                img.string = img['src']
 
             problem_info_table = soup.find_all('table')[2]
 
