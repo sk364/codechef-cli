@@ -37,6 +37,11 @@ def get_description(problem_code, contest_code=None):
             content = soup.find_all('div', class_='content')[1]
             content.find_all('h3')[0].extract()
             content.find_all('h3')[0].extract()
+            while content.find('img'):
+                img = content.find('img')
+                img.name = "p"
+                img.string  = img['src']
+
             problem_info_table = soup.find_all('table')[2]
 
             resps = [{
