@@ -2,13 +2,13 @@ import argparse
 import sys
 from getpass import getpass
 
-from .auth import login, logout
-from .problems import (get_contests, get_description, get_ratings,
+from auth import login, logout
+from problems import (get_contests, get_description, get_ratings,
                        get_solution, get_solutions, get_tags, search_problems,
                        submit_problem)
-from .users import get_user
-from .utils.constants import INVALID_USERNAME
-from .utils.helpers import print_response
+from users import get_user
+from utils.constants import INVALID_USERNAME
+from utils.helpers import print_response
 
 # Supporting input in Python 2/3
 try:
