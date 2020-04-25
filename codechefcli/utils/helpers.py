@@ -205,16 +205,17 @@ def check_download_images(image_url, problem_code, item=1):
     :desc: Downloads the Image if it doesnot exist already
     :param: `image_url` Url of the image to download
             `problem_code` Problem Code of the problem
+            `item` Number of item to download by default 1
     """
 
     url = image_url
     dot_split_url = url.split('.')
     filename = problem_code+'_'+str(item)+'.'+dot_split_url[-1]
-    image_dir = os.getcwd() + "/" + IMAGE_DIR
+    image_dir = os.getcwd() + "/" + IMAGE_DIR + "/" + problem_code
     if(not os.path.isdir(image_dir)):
         #Make the directory
         try:
-            os.mkdir(image_dir)
+            os.makedirs(image_dir, exist_ok=True)
         except OSError:
             print("Error creating directory")
     file_path = image_dir + "/" + filename

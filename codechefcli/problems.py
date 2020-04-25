@@ -9,13 +9,17 @@ from .utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
                               PROBLEM_LIST_TABLE_HEADINGS,
                               RATINGS_TABLE_HEADINGS, RESULT_CODES,
                               SERVER_DOWN_MSG)
-from .utils.helpers import color_text, get_session, html_to_list, request, check_download_images
+from .utils.helpers import color_text, get_session, html_to_list, request
+from .utils.helpers import check_download_images
 
 
 def get_description(problem_code, contest_code=None, download_image=False):
     """
     :desc: Retrieves a particular problem description.
     :param: `problem_code` Code of the problem.
+    :param: `contest_code` Code of the contest if any default None
+    :param: `download_image` Boolean for downloading problem images based on
+             user response default False
     :return: `str` [description / Not Found / Server down]
     """
 
@@ -41,11 +45,9 @@ def get_description(problem_code, contest_code=None, download_image=False):
             if(download_image):
                 images = content.find_all('img')
                 file_paths = []
-                count=1
                 for image in images:
-                    file_path = check_download_images(image['src'], problem_code, item=count)
+                    file_path = check_download_images(image['src'], problem_code, item=images.index(image)+1)
                     file_paths.append(file_path)
-                    count+=1
             problem_info_table = soup.find_all('table')[2]
 
             resps = [{
