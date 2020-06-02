@@ -2,8 +2,6 @@
 
 A command-line tool for querying and submitting problems on [CodeChef](https://www.codechef.com/).
 
-** PRs accepted **
-
 # Features
 
 * Get problem description
