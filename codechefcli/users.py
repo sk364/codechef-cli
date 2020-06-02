@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from bs4 import BeautifulSoup
 
-from .utils.constants import BASE_URL
-from .utils.helpers import get_session, request
-
+from utils.constants import BASE_URL
+from utils.helpers import get_session, request
+import re
 
 def get_user(username):
     """
@@ -26,7 +28,11 @@ def get_user(username):
         else:
             soup = BeautifulSoup(req_obj.text, 'html.parser')
             header = soup.find_all('header')[1].text.strip()
-            user_details = '\n' + header + '\n\n' + soup.find(class_='user-details').text.strip()
+            star_rating_span = soup.find('span', {'class' : 'rating'})
+            star_rating = star_rating_span.get_text()
+            user_info = soup.find(class_='user-details').text.strip()
+            user_info = re.sub(u'\d★'," ",user_info, flags=re.UNICODE)
+            user_details = '\nUser Details:\n' + header + '\n\nUser Star Rating: ' + star_rating +'\n' + user_info #soup.find(class_='user-details').text.strip()
             rating = soup.find(class_='rating-number').text
             ranks = soup.find(class_='rating-ranks').find('ul').find_all('li')
 
