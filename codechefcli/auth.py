@@ -3,11 +3,11 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-from .decorators import login_required
-from .utils.constants import (BASE_URL, COOKIES_FILE_PATH, EMPTY_AUTH_DATA_MSG,
+from decorators import login_required
+from utils.constants import (BASE_URL, COOKIES_FILE_PATH, EMPTY_AUTH_DATA_MSG,
                               INCORRECT_CREDS_MSG, LOGIN_SUCCESS_MSG,
                               LOGOUT_SUCCESS_MSG, SESSION_LIMIT_MSG)
-from .utils.helpers import get_session, request
+from utils.helpers import get_session, request
 
 try:
     from http.cookiejar import Cookie, LWPCookieJar
