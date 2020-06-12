@@ -8,12 +8,6 @@ from codechefcli.helpers import (COOKIES_FILE_PATH, get_csrf_token,
                                  get_session, init_session_cookie, request,
                                  set_session_cookies)
 
-# Supporting input in Python 2/3
-try:
-    input = raw_input
-except NameError:
-    pass
-
 CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 CSRF_TOKEN_MISSING = 'No CSRF Token found'
 SESSION_LIMIT_FORM_ID = '#session-limit-page'

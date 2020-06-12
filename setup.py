@@ -2,6 +2,7 @@
 
 import sys
 from codecs import open
+
 from setuptools import setup
 
 if sys.version < '3.6':

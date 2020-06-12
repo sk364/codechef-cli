@@ -1,12 +1,8 @@
 import os
 from functools import wraps
+from http.cookiejar import LWPCookieJar
 
 from codechefcli.helpers import COOKIES_FILE_PATH
-
-try:
-    from http.cookiejar import LWPCookieJar
-except ImportError:
-    from cookielib import LWPCookieJar
 
 
 def login_required(func):
