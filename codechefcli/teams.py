@@ -1,4 +1,4 @@
-from codechefcli.helpers import get_session, request
+from codechefcli.helpers import request
 
 
 def get_team_url(name):
@@ -12,7 +12,7 @@ def format_contest(item):
 
 
 def get_team(name):
-    resp = request(get_session(), url=get_team_url(name))
+    resp = request(url=get_team_url(name))
     resps = []
 
     if resp.status_code == 200:

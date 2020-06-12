@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from codechefcli.helpers import BASE_URL, get_session, request, style_text
+from codechefcli.helpers import BASE_URL, request, style_text
 from codechefcli.teams import get_team_url
 
 HEADER = 'header'
@@ -20,7 +20,7 @@ def format_list_item(item):
 
 
 def get_user(username):
-    resp = request(get_session(), url=f'/users/{username}')
+    resp = request(url=f'/users/{username}')
 
     if resp.status_code == 200:
         team_url = get_team_url(username)

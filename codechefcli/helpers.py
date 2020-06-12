@@ -56,7 +56,13 @@ def get_username():
     return None
 
 
-def request(session, method="GET", url="", **kwargs):
+def request(session=None, method="GET", url="", **kwargs):
+    if not session:
+        session = get_session()
+    if kwargs.get('token'):
+        session.headers = getattr(session, 'headers') or {}
+        session.headers.update({'X-CSRF-Token': kwargs['token']})
+
     try:
         return session.request(method=method, url=f'{BASE_URL}{url}', timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
