@@ -74,6 +74,8 @@ def get_form_token(rhtml):
 def get_status_table(status_code):
     resp = request(url=f'/error_status_table/{status_code}')
     if resp.status_code == 200:
+        if not resp.text:
+            return
         return resp.html
 
 
@@ -126,11 +128,11 @@ def submit_problem(problem_code, solution_file, language):
 
     post_resp = request(method='POST', url=url, data=data, files=files)
     if post_resp.status_code == 200:
-        print(style_text('Running code...\n', 'BLUE'))
+        print(style_text('Submitting code...\n', 'BLUE'))
 
         status_code = post_resp.url.split('/')[-1]
         url = f'/get_submission_status/{status_code}'
-
+        print(style_text('Fetching results...\n', 'BLUE'))
         while True:
             resp = request(url=url, token=csrf_token)
 
@@ -157,11 +159,13 @@ def submit_problem(problem_code, solution_file, language):
                 else:
                     data = ''
 
-                data_rows = html_to_list(get_status_table(status_code))
-                return [
-                    {'data_type': 'text', 'code': 200, 'data': data},
-                    {'data_type': 'table', 'code': 200, 'data': data_rows}
-                ]
+                resps = [{'data': data}]
+                status_table = get_status_table(status_code)
+                if status_table:
+                    resps.append({'data_type': 'table', 'data': html_to_list(status_table)})
+                return resps
+            else:
+                print(style_text('Waiting...\n', 'BLUE'))
     return [{'code': 503}]
 
 
