@@ -4,14 +4,9 @@ from getpass import getpass
 from requests_html import HTMLSession
 
 from codechefcli.decorators import login_required
-from codechefcli.utils.helpers import (
-    get_csrf_token,
-    get_session,
-    init_session_cookie,
-    request,
-    set_session_cookies,
-    COOKIES_FILE_PATH
-)
+from codechefcli.utils.helpers import (COOKIES_FILE_PATH, get_csrf_token,
+                                       get_session, init_session_cookie,
+                                       request, set_session_cookies)
 
 # Supporting input in Python 2/3
 try:

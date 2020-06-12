@@ -1,7 +1,7 @@
 import os
 import sys
-from pydoc import pager
 from os.path import expanduser
+from pydoc import pager
 
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
