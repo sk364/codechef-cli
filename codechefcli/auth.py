@@ -4,10 +4,14 @@ from getpass import getpass
 from requests_html import HTMLSession
 
 from codechefcli.decorators import login_required
-from codechefcli.utils.constants import BASE_URL, COOKIES_FILE_PATH
-from codechefcli.utils.helpers import (get_csrf_token, get_session,
-                                       init_session_cookie, request,
-                                       set_session_cookies)
+from codechefcli.utils.helpers import (
+    get_csrf_token,
+    get_session,
+    init_session_cookie,
+    request,
+    set_session_cookies,
+    COOKIES_FILE_PATH
+)
 
 # Supporting input in Python 2/3
 try:
@@ -51,7 +55,7 @@ def disconnect_active_sessions(session, login_resp_html):
     session.headers = getattr(session, 'headers') or {}
     session.headers.update({'X-CSRF-Token': token})
 
-    resp = request(session, 'POST', f'{BASE_URL}{post_url}', data=other_active_sessions)
+    resp = request(session, 'POST', post_url, data=other_active_sessions)
     if resp and hasattr(resp, 'status_code') and resp.status_code == 200:
         return [{'data': LOGIN_SUCCESS_MSG}]
     return [{'code': 503}]
@@ -67,7 +71,7 @@ def make_login_req(username, password, disconnect_sessions):
     with HTMLSession() as session:
         set_session_cookies(session)
 
-        resp = request(session, 'GET', BASE_URL)
+        resp = request(session, 'GET', '')
         token = get_csrf_token(resp.html, CSRF_TOKEN_INPUT_ID)
         if not token:
             return [{'resps': CSRF_TOKEN_MISSING, 'code': 500}]
@@ -79,7 +83,7 @@ def make_login_req(username, password, disconnect_sessions):
             'csrfToken': token
         }
 
-        resp = request(session, 'POST', BASE_URL, data=data)
+        resp = request(session, 'POST', '', data=data)
         resp_html = resp.html
 
         if resp.status_code == 200:
@@ -113,7 +117,7 @@ def login(username=None, password=None, disconnect_sessions=False):
 @login_required
 def logout(session=None):
     session = session or get_session()
-    url = BASE_URL + '/logout'
+    url = '/logout'
     req_obj = request(session, 'GET', url)
 
     if req_obj.status_code == 200:
