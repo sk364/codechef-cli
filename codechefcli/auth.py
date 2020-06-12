@@ -55,7 +55,7 @@ def disconnect_active_sessions(session, login_resp_html):
     session.headers = getattr(session, 'headers') or {}
     session.headers.update({'X-CSRF-Token': token})
 
-    resp = request(session, 'POST', post_url, data=other_active_sessions)
+    resp = request(session, method='POST', url=post_url, data=other_active_sessions)
     if resp and hasattr(resp, 'status_code') and resp.status_code == 200:
         return [{'data': LOGIN_SUCCESS_MSG}]
     return [{'code': 503}]
@@ -71,7 +71,7 @@ def make_login_req(username, password, disconnect_sessions):
     with HTMLSession() as session:
         set_session_cookies(session)
 
-        resp = request(session, 'GET', '')
+        resp = request(session)
         token = get_csrf_token(resp.html, CSRF_TOKEN_INPUT_ID)
         if not token:
             return [{'resps': CSRF_TOKEN_MISSING, 'code': 500}]
@@ -83,7 +83,7 @@ def make_login_req(username, password, disconnect_sessions):
             'csrfToken': token
         }
 
-        resp = request(session, 'POST', '', data=data)
+        resp = request(session, method='POST', data=data)
         resp_html = resp.html
 
         if resp.status_code == 200:
@@ -116,13 +116,9 @@ def login(username=None, password=None, disconnect_sessions=False):
 
 @login_required
 def logout(session=None):
-    session = session or get_session()
-    url = '/logout'
-    req_obj = request(session, 'GET', url)
-
-    if req_obj.status_code == 200:
+    resp = request(session or get_session(), url='/logout')
+    if resp.status_code == 200:
         if os.path.exists(COOKIES_FILE_PATH):
             os.remove(COOKIES_FILE_PATH)
         return [{'data': LOGOUT_SUCCESS_MSG}]
-    elif req_obj.status_code == 503:
-        return [{'code': 503}]
+    return [{'code': 503}]

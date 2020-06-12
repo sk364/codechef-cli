@@ -60,7 +60,7 @@ def get_username():
     return None
 
 
-def request(session, method, url, **kwargs):
+def request(session, method="GET", url="", **kwargs):
     try:
         return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):

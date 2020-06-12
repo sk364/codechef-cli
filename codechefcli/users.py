@@ -21,7 +21,7 @@ def format_list_item(item):
 
 
 def get_user(username):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/users/{username}')
+    resp = request(get_session(), url=f'{BASE_URL}/users/{username}')
 
     if resp.status_code == 200:
         team_url = get_team_url(username)

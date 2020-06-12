@@ -13,7 +13,7 @@ def format_contest(item):
 
 
 def get_team(name):
-    resp = request(get_session(), 'GET', get_team_url(name))
+    resp = request(get_session(), url=get_team_url(name))
     resps = []
 
     if resp.status_code == 200:
