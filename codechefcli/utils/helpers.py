@@ -2,27 +2,29 @@ import os
 import sys
 from pydoc import pager
 
-import requests
-from bs4 import BeautifulSoup
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
+from requests_html import HTMLSession
 
-from .constants import (BCOLORS, COOKIES_FILE_PATH, INTERNET_DOWN_MSG,
-                        SERVER_DOWN_MSG, UNAUTHORIZED_MSG, USER_AGENT)
+from codechefcli.utils.constants import (
+    BCOLORS,
+    COOKIES_FILE_PATH,
+    INTERNET_DOWN_MSG,
+    SERVER_DOWN_MSG,
+    UNAUTHORIZED_MSG,
+    USER_AGENT
+)
 
 try:
-    from http.cookiejar import LWPCookieJar
+    from http.cookiejar import Cookie, LWPCookieJar
 except ImportError:
-    from cookielib import LWPCookieJar
+    from cookielib import Cookie, LWPCookieJar
+
+MIN_NUM_SPACES = 3
 
 
 def get_session(fake_browser=False):
-    """
-    :desc: Builds session from the saved cookies
-    :return: requests.Session object
-    """
-
-    session = requests.Session()
+    session = HTMLSession()
 
     if fake_browser:
         session.headers = {'User-Agent': USER_AGENT}
@@ -33,12 +35,18 @@ def get_session(fake_browser=False):
     return session
 
 
-def get_username():
-    """
-    :desc: Retrieves username from session cookies.
-    :return: `string` username value or `None` if doesn't exist.
-    """
+def set_session_cookies(session):
+    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
 
+
+def init_session_cookie(name, value, **kwargs):
+    return Cookie(version=0, name=name, value=value, port=None, port_specified=False,
+                  domain='www.codechef.com', domain_specified=False, domain_initial_dot=False,
+                  path='/', path_specified=True, secure=False, expires=None, discard=False,
+                  comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+
+
+def get_username():
     session = get_session()
 
     for index, cookie in enumerate(session.cookies):
@@ -49,97 +57,69 @@ def get_username():
 
 
 def request(session, method, url, **kwargs):
-    """
-    :desc: Custom wrapper method to add a timeout message
-           when there is a `requests.exceptions.ConnectionError`
-           or `requests.ReadTimeout` exception.
-    :param: `session` requests.Session object
-            `method` HTTP method to use
-            `url` name of the URL
-    :return: requests.Response object.
-    """
-
     try:
-        return session.request(method=method, url=url, timeout=(5, 5), **kwargs)
+        return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
         print(INTERNET_DOWN_MSG)
         sys.exit(1)
 
 
-def html_to_list(table_html):
-    """
-    :desc: Converts the input html table to a 2D list that
-           can be given as a input to the print_table function
-    :param: `table_html` HTML text contaning <table> tag
-    """
-
-    if not table_html:
+def html_to_list(table):
+    if not table:
         return []
 
-    soup = BeautifulSoup(table_html, 'html.parser')
-    rows = soup.find('table').find_all('tr')
-    th_tags = rows[0].find_all('th')
-    headings = [[row.text.strip() for row in th_tags]]
-    headings[0] = [x.upper() for x in headings[0]]
-    data_rows = headings + [[data.text.strip() for data in row.find_all('td')] for row in rows[1:]]
+    rows = table.find('tr')
+    data_rows = [[header.text.strip().upper() for header in rows[0].find('th')]]
+    for row in rows[1:]:
+        data_rows.append([col.text.strip() for col in row.find('td')])
     return data_rows
 
 
-def print_table(data_rows):
-    """
-    :desc: Prints data in tabular format.
-    :param: `table_html` HTML text containing <table> tag.
-    """
-
-    if len(data_rows) == 0:
-        return
-
-    num_cols = len(data_rows[0])
+def get_col_max_lengths(data_rows, num_cols):
     max_len_in_cols = [0] * num_cols
     for row in data_rows:
         for index, val in enumerate(row):
             if len(val) > max_len_in_cols[index]:
                 max_len_in_cols[index] = len(val)
-
-    data_str = ''
-    for row in data_rows:
-        for index, val in enumerate(row):
-            data_str += val + (max_len_in_cols[index] - len(val) + 3) * ' '
-        data_str += '\n\n'
-
-    data_str = data_str.strip()
-    pager(data_str)
-    print(data_str)
+    return max_len_in_cols
 
 
-def print_inverse_table(table_html):
-    """
-    :desc: Prints data in "inverse" tabular format.
-    :param: `table_html` HTML text containing <table> tag.
-    """
-
-    if not table_html:
+def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
+    if len(data_rows) == 0:
         return
 
-    soup = BeautifulSoup(table_html, 'html.parser')
-    rows = soup.find_all('tr')
+    max_len_in_cols = get_col_max_lengths(data_rows, len(data_rows[0]))
 
-    data_str = ''
-    for row in rows:
-        cols = row.find_all('td')
-        for col in cols:
-            data_str += ' '.join(col.text.strip().split()) + '    '
-        data_str += '\n'
+    table = []
+    for row in data_rows:
+        _row = []
+        for index, val in enumerate(row):
+            num_spaces = max_len_in_cols[index] - len(val) + min_num_spaces
+            _row.append(val + (num_spaces * ' '))
+        table.append("".join(_row))
 
+    table_str = '\n\n'.join(table)
+    pager(table_str)
+    print(table_str)
+
+
+def print_inverse_table(table, min_num_spaces=MIN_NUM_SPACES):
+    if not table:
+        return
+
+    data = []
+    for row in table.find('tr'):
+        _row = []
+        for col in row.find('td'):
+            _row.append(' '.join(col.text.strip().split()) + min_num_spaces * ' ')
+        data.append("".join(_row))
+
+    data_str = "\n".join(data)
     pager(data_str)
     print(data_str)
 
 
-def color_text(text, color=None):
-    """
-    :desc: Colors the text
-    """
-
+def style_text(text, color=None):
     if color is None:
         return text
 
@@ -147,12 +127,8 @@ def color_text(text, color=None):
 
 
 def print_response_util(data, extra, data_type, color, is_pager=False, inverse=False):
-    """
-    :desc: Utility function to print text
-    """
-
     if data is None and extra is None:
-        print(color_text('Nothing to show.', 'WARNING'))
+        print(style_text('Nothing to show.', 'WARNING'))
 
     if data is not None:
         if data_type == 'table':
@@ -162,23 +138,14 @@ def print_response_util(data, extra, data_type, color, is_pager=False, inverse=F
                 print_table(data)
         elif data_type == 'text':
             if is_pager:
-                pager(color_text(data, color))
-            print(color_text(data, color))
+                pager(style_text(data, color))
+            print(style_text(data, color))
 
     if extra is not None:
-        print(color_text(extra, color))
+        print(style_text(extra, color))
 
 
-# TODO: Add robust validations on input `data`
 def print_response(data_type='text', code=200, data=None, extra=None, pager=False, inverse=False):
-    """
-    :desc: Prints response to user.
-    :param: `data_type` Type of data
-            `data` Data to print
-            `extra` Extra messages to print
-            `code` Response code
-    """
-
     color = None
 
     if code == 503:
@@ -191,3 +158,8 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
         data = UNAUTHORIZED_MSG
 
     print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
+
+
+def get_csrf_token(rhtml, selector):
+    token = rhtml.find(f"#{selector}", first=True)
+    return token and hasattr(token.element, 'value') and token.element.value

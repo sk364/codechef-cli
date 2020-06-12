@@ -1,32 +1,51 @@
-from bs4 import BeautifulSoup
-
-from .utils.constants import BASE_URL
-from .utils.helpers import get_session, request
+from codechefcli.utils.constants import BASE_URL
+from codechefcli.utils.helpers import get_session, request
 
 
-def get_team(team_name):
-    """
-    :desc: Retrieves team information.
-    :param: `team_name` Name of the team.
-    :return: `resps` response information array
-    """
+def get_team_url(name):
+    return f"{BASE_URL}/teams/view/{name}"
 
-    session = get_session()
-    url = BASE_URL + '/teams/view/' + team_name
-    req_obj = request(session, 'GET', url)
+
+def format_contest(item):
+    if item.startswith("Information for"):
+        return f"\n{item}"
+    return item
+
+
+def get_team(name):
+    resp = request(get_session(), 'GET', get_team_url(name))
     resps = []
 
-    if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        header = soup.find_all('table')[1].text.strip()
-        team_details = '\n' + header + '\n\n' + soup.find_all('table')[2].text.strip()
+    if resp.status_code == 200:
+        resp_html = resp.html
+        tables = resp_html.find('table')
 
-        resps = [{'data': team_details}]
+        header = tables[1].text.strip()
+        team_info = tables[2].text.strip()
+        team_info = team_info.replace(':\n', ': ')
+        team_info_list = team_info.split('\n')
 
-    elif req_obj.status_code == 404:
-        resps = [{'code': 404, 'data': 'Team not found.'}]
+        basic_info = "\n".join(team_info_list[:2])
+        contests_info = "\n".join([format_contest(item) for item in team_info_list[2:-1]])
 
-    elif req_obj.status_code == 503:
-        resps = [{'code': 503}]
+        # TODO: fix formatting
+        problems_solved_table = tables[-1].text.strip()
+
+        team_details = ['']
+        team_details.append(header)
+        team_details.append('')
+        team_details.append(basic_info)
+        team_details.append(contests_info)
+        team_details.append('')
+        team_details.append('Problems Successfully Solved:')
+        team_details.append(problems_solved_table)
+
+        return [{'data': "\n".join(team_details)}]
+
+    elif resp.status_code == 404:
+        return [{'code': 404, 'data': 'Team not found.'}]
+
+    elif resp.status_code == 503:
+        return [{'code': 503}]
 
     return resps

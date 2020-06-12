@@ -1,50 +1,70 @@
 # -*- coding: utf-8 -*-
 
-from bs4 import BeautifulSoup
-
-from utils.constants import BASE_URL
-from utils.helpers import get_session, request
 import re
 
+from codechefcli.teams import get_team_url
+from codechefcli.utils.constants import BASE_URL
+from codechefcli.utils.helpers import get_session, request, style_text
+
+HEADER = 'header'
+RATING_NUMBER_CLASS = '.rating-number'
+RATING_RANKS_CLASS = '.rating-ranks'
+STAR_RATING_CLASS = '.rating'
+USER_DETAILS_CONTAINER_CLASS = '.user-details-container'
+USER_DETAILS_CLASS = '.user-details'
+
+
+def get_user_teams_url(username):
+    return f'{BASE_URL}/users/{username}/teams/'
+
+
+def format_list_item(item):
+    return ": ".join([i.strip() for i in item.text.split(':')])
+
+
 def get_user(username):
-    """
-    :desc: Retrieves user information.
-    :param: `username` Username of the user.
-    :return: `resps` response information array
-    """
+    resp = request(get_session(), 'GET', f'{BASE_URL}/users/{username}')
 
-    session = get_session()
-    url = BASE_URL + '/users/' + username
-    req_obj = request(session, 'GET', url)
-    resps = []
-
-    if req_obj.status_code == 200:
-        if 'Team handle' in req_obj.text:
-            team_url = BASE_URL + '/teams/view/' + username
-            resps = [{
-                'data': 'This is a team handle. View at: ' + team_url + '\n',
+    if resp.status_code == 200:
+        team_url = get_team_url(username)
+        if resp.url == team_url:
+            return [{
+                'data': 'This is a team handle. Run `codechefcli --team {username}` to get team info\n',
                 'code': 400
             }]
+        elif resp.url.rstrip('/') == BASE_URL:
+            return [{'code': 404, 'data': 'User not found.'}]
         else:
-            soup = BeautifulSoup(req_obj.text, 'html.parser')
-            header = soup.find_all('header')[1].text.strip()
-            star_rating_span = soup.find('span', {'class' : 'rating'})
-            star_rating = star_rating_span.get_text()
-            user_info = soup.find(class_='user-details').text.strip()
-            user_info = re.sub(u'\d★'," ",user_info, flags=re.UNICODE)
-            user_details = '\nUser Details:\n' + header + '\n\nUser Star Rating: ' + star_rating +'\n' + user_info #soup.find(class_='user-details').text.strip()
-            rating = soup.find(class_='rating-number').text
-            ranks = soup.find(class_='rating-ranks').find('ul').find_all('li')
+            resp_html = resp.html
+            details_container = resp_html.find(USER_DETAILS_CONTAINER_CLASS, first=True)
 
-            user_details += ' - ' + BASE_URL + '/users/' + username + '/teams/\n\n'
-            user_details += 'Rating: ' + rating + '\n\n'
-            user_details += 'Global Rank: ' + ranks[0].text.split()[0] + '\n'
-            user_details += 'Country Rank: ' + ranks[1].text.split()[0] + '\n\n'
+            # basic info
+            header = details_container.find(HEADER, first=True).text.strip()
+            info_list_items = details_container.find(USER_DETAILS_CLASS, first=True).find('li')
 
-            resps = [{'data': user_details}]
-    elif req_obj.status_code == 404:
-        resps = [{'code': 404, 'data': 'User not found.'}]
-    elif req_obj.status_code == 503:
-        resps = [{'code': 503}]
+            # ignore first & last item i.e. username item & teams item respectively
+            info = "\n".join([format_list_item(li) for li in info_list_items[1:-1]])
+            user_teams_url = get_user_teams_url(username)
 
-    return resps
+            # rating
+            star_rating = details_container.find(STAR_RATING_CLASS, first=True).text.strip()
+            rating = resp_html.find(RATING_NUMBER_CLASS, first=True).text.strip()
+            rank_items = resp_html.find(RATING_RANKS_CLASS, first=True).find('li')
+            global_rank = rank_items[0].find('a', first=True).text.strip()
+            country_rank = rank_items[1].find('a', first=True).text.strip()
+
+            user_details = ['']
+            user_details.append(style_text(f'User Details for {header} ({username}):', 'BOLD'))
+            user_details.append('')
+            user_details.append(info)
+            user_details.append(f"User's Teams: {user_teams_url}")
+            user_details.append('')
+            user_details.append(f'Rating: {star_rating} {rating}')
+            user_details.append(f'Global Rank: {global_rank}')
+            user_details.append(f'Country Rank: {country_rank}')
+            user_details.append('')
+            user_details.append(f'Find more at: {resp.url}')
+            user_details.append('')
+
+            return [{'data': "\n".join(user_details)}]
+    return [{'code': 503}]

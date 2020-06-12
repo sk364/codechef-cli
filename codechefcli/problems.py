@@ -2,312 +2,238 @@ import math
 import re
 from datetime import datetime
 
-from bs4 import BeautifulSoup
+from requests_html import HTML
 
-from decorators import login_required, sort_it
-from utils.constants import (BASE_URL, DEFAULT_NUM_LINES,
-                              PROBLEM_LIST_TABLE_HEADINGS,
-                              RATINGS_TABLE_HEADINGS, RESULT_CODES,
-                              SERVER_DOWN_MSG)
-from utils.helpers import color_text, get_session, html_to_list, request
+from codechefcli.auth import is_logged_in
+from codechefcli.decorators import login_required, sort_it
+from codechefcli.utils.constants import BASE_URL, SERVER_DOWN_MSG
+from codechefcli.utils.helpers import (
+    style_text,
+    get_session,
+    html_to_list,
+    request,
+    get_csrf_token
+)
+
+CSRF_TOKEN_SUBMIT_FORM = "edit-csrfToken"
+LANGUAGE_SELECTOR = "#language"
+INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
+PAGE_INFO_CLASS = '.pageinfo'
+PROBLEM_SUBMISSION_FORM_ID = '#problem-submission'
+PROBLEM_SUB_DATA_FORM_ID = 'problem_submission'
+PROBLEM_SUBMISSION_INPUT_ID = '#edit-problem-submission-form-token'
+LANGUAGE_DROPDOWN_ID = '#edit-language'
+COMPILATION_ERROR_CLASS = '.cc-error-txt'
+PROBLEM_LIST_TABLE_HEADINGS = ['CODE', 'NAME', 'SUBMISSION', 'ACCURACY']
+RESULT_CODES = {'AC': 15, 'WA': 14, 'TLE': 13, 'RTE': 12, 'CTE': 11}
+RATINGS_TABLE_HEADINGS = ['GLOBAL(COUNTRY)', 'USER NAME', 'RATING', 'GAIN/LOSS']
 
 
-def get_description(problem_code, contest_code=None):
-    """
-    :desc: Retrieves a particular problem description.
-    :param: `problem_code` Code of the problem.
-    :return: `str` [description / Not Found / Server down]
-    """
+def get_description(problem_code, contest_code):
+    url = f'{BASE_URL}/api/contests/{contest_code}/problems/{problem_code}'
+    resp = request(get_session(), 'GET', url)
 
-    session = get_session()
-
-    url = BASE_URL
-    if contest_code is not None:
-        url += '/' + contest_code
-    url += '/problems/' + problem_code
-
-    req_obj = request(session, 'GET', url)
-
-    if req_obj.status_code == 200:
-        problem_html = req_obj.text
-        soup = BeautifulSoup(problem_html, 'html.parser')
-        resps = []
-
-        if soup.find(id='problem-code'):
-            content = soup.find_all('div', class_='content')[1]
-            content.find_all('h3')[0].extract()
-            content.find_all('h3')[0].extract()
-            problem_info_table = soup.find_all('table')[2]
-
-            resps = [{
-                'data_type': 'text',
-                'code': 200,
-                'data': color_text(color_text('Problem Description:', 'BOLD'), 'BLUE'),
-            }, {
-                'data_type': 'text',
-                'code': 200,
-                'data': content.text,
-                'pager': True
-            }, {
-                'data_type': 'text',
-                'code': 200,
-                'data': color_text(color_text('Problem Info:', 'BOLD'), 'BLUE')
-            }, {
-                'data_type': 'table',
-                'code': 200,
-                'data': str(problem_info_table),
-                'inverse': True
-            }]
-        else:
-            resps.append({'data': 'Problem not found.', 'code': 404})
-            if contest_code is None:
-                resps.append({
-                    'data': 'Maybe, the problem exists only in the contest.\n'
-                            'Add ' + color_text("--search <contest code>", 'BOLD') +
-                            ' to search in the contest specific problems.'
-                })
-        return resps
-
-    elif req_obj.status_code == 503:
+    try:
+        resp_json = resp.json()
+    except ValueError:
         return [{'code': 503}]
 
+    if resp_json["status"] == "success":
+        problem = [
+            '',
+            style_text('Name: ', "BOLD") + resp_json['problem_name'],
+            style_text("Description:", "BOLD"),
+            re.sub(r'(<|<\/)\w+>', '', resp_json["body"]),
+            '',
+            style_text("Author: ", "BOLD") + resp_json['problem_author'],
+            style_text("Date Added: ", "BOLD") + resp_json['date_added'],
+            style_text("Max Time Limit: ", "BOLD") + f"{resp_json['max_timelimit']} secs",
+            style_text("Source Limit: ", "BOLD") + f"{resp_json['source_sizelimit']} Bytes",
+            style_text("Languages: ", "BOLD") + resp_json['languages_supported'],
+            ''
+        ]
+        if resp_json.get('tags'):
+            problem.append(
+                style_text('Tags: ', 'BOLD') + \
+                " ".join([tag.text for tag in HTML(html=resp_json['tags']).find('a')])
+            )
+            problem.append('')
+        if resp_json.get('editorial_url'):
+            problem.append(style_text('Editorial: ', 'BOLD') + resp_json['editorial_url'])
+            problem.append('')
 
-def get_form_token(problem_submit_html):
-    """
-    :desc: Retrieves problem submission form token.
-    :param: `problem_submit_html` HTML text containing problem submission form.
-    :return: `str` form token value
-    """
-
-    soup = BeautifulSoup(problem_submit_html, 'html.parser')
-    form = soup.find('form', id='problem-submission')
-    return form.find('input', id='edit-problem-submission-form-token')['value']
+        return [{"data": "\n".join(problem)}]
+    elif resp_json["status"] == "error":
+        return [{
+            'data': 'Problem not found. Use `--search` to search in a specific contest',
+            'code': 404
+        }]
+    return [{'code': 503}]
 
 
-def get_error_table(status_code):
-    """
-    :desc: Retrieves error status table.
-    :param: `status_code` Status code of the submitted problem.
-    :return: `str` error status table
-    """
+def get_form_token(rhtml):
+    form = rhtml.find(PROBLEM_SUBMISSION_FORM_ID, first=True)
+    inp = form and form.find(PROBLEM_SUBMISSION_INPUT_ID, first=True)
+    input_element = inp and hasattr(inp, 'element') and inp.element
+    return input_element is not None and hasattr(input_element, 'value') and input_element.value
 
-    session = get_session()
-    url = BASE_URL + '/error_status_table/' + status_code
-    req_obj = request(session, 'GET', url)
-    if req_obj.status_code == 200:
-        return req_obj.text
 
-    return None
+def get_status_table(status_code):
+    resp = request(get_session(), 'GET', f'{BASE_URL}/error_status_table/{status_code}')
+    if resp.status_code == 200:
+        return resp.html
 
 
 def get_compilation_error(status_code):
-    """
-    :desc: Retrieves compilation error text.
-    :param: `status_code` Status code of the submitted problem.
-    :return: `str` Compilation error text.
-    """
-
-    session = get_session()
-    url = BASE_URL + '/view/error/' + status_code
-    req_obj = request(session, 'GET', url)
-
-    if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        return soup.find('div', class_='cc-error-txt').text
-
-    if req_obj.status_code == 503:
-        return SERVER_DOWN_MSG
-
-    return ''
+    resp = request(get_session(), 'GET', f'{BASE_URL}/view/error/{status_code}')
+    if resp.status_code == 200:
+        return resp.html.find(COMPILATION_ERROR_CLASS, first=True).text
+    return SERVER_DOWN_MSG
 
 
-def get_language_code(problem_submit_html, language):
-    """
-    :desc: Retrieves language code.
-    :param: `problem_submit_html` HTML text containing problem submission form.
-            `language` Language Name (eg. Python3, C++, etc.)
-    :return: `str` Language code.
-    """
-
-    soup = BeautifulSoup(problem_submit_html, 'html.parser')
-    form = soup.find('form', id='problem-submission')
-    languages_dropdown = form.find('select', id='edit-language')
-    language_options = languages_dropdown.find_all('option')
-
-    for option in language_options:
+def get_language_code(rhtml, language):
+    form = rhtml.find(PROBLEM_SUBMISSION_FORM_ID, first=True)
+    languages_dropdown = form.find(LANGUAGE_DROPDOWN_ID, first=True)
+    for option in languages_dropdown.find('option'):
         if language.lower() + '(' in option.text.lower():
-            return option['value']
+            return dict(option.element.items())['value']
 
 
 @login_required
 def submit_problem(problem_code, solution_file, language):
-    """
-    :desc: Submits the problem.
-    :param: `problem_code` Code of the problem.
-            `solution_file` Path of the solution file.
-            `language` Language Name (eg. Python3, C++, etc.)
-    :return: `resps` response information array
-    """
-
     session = get_session()
-    url = BASE_URL + '/submit/' + problem_code
-    req_obj = request(session, 'GET', url)
-    resps = []
+    url = f'{BASE_URL}/submit/{problem_code}'
+    get_resp = request(session, 'GET', url)
 
-    if req_obj.status_code == 200:
-        form_token = get_form_token(req_obj.text)
-        language_code = get_language_code(req_obj.text, language)
+    if not is_logged_in(get_resp):
+        return [{"code": 401, "data": "This session has been disconnected. Login again."}]
+
+    if get_resp.status_code == 200:
+        rhtml = get_resp.html
+        form_token = get_form_token(rhtml)
+        language_code = get_language_code(rhtml, language)
+        csrf_token = get_csrf_token(rhtml, CSRF_TOKEN_SUBMIT_FORM)
+
         if language_code is None:
             return [{'code': 400, 'data': 'Invalid language.'}]
-    elif req_obj.status_code == 503:
+    else:
         return [{'code': 503}]
 
     try:
         solution_file_obj = open(solution_file)
     except IOError:
-        resps = [{
-            'data_type': 'text',
-            'data': 'Solution file not found. Please provide a valid path.',
-            'code': 400
-        }]
-        return resps
+        return [{'data_type': 'text', 'data': 'Solution file not found.', 'code': 400}]
 
-    post_data = {
+    data = {
         'language': language_code,
         'problem_code': problem_code,
-        'form_id': 'problem_submission',
-        'form_token': form_token,
+        'form_id': PROBLEM_SUB_DATA_FORM_ID,
+        'form_token': form_token
     }
-    post_files = {'files[sourcefile]': solution_file_obj}
+    files = {'files[sourcefile]': solution_file_obj}
 
-    req_obj = request(session, 'POST', url, data=post_data,
-                      files=post_files)
-    if req_obj.status_code == 200:
-        print(color_text('Running code...\n', 'BLUE'))
+    post_resp = request(get_session(), 'POST', url, data=data, files=files)
+    if post_resp.status_code == 200:
+        print(style_text('Running code...\n', 'BLUE'))
 
-        status_code = req_obj.url.split('/')[-1]
-        url = BASE_URL + '/get_submission_status/' + status_code
+        status_code = post_resp.url.split('/')[-1]
+        url = f'{BASE_URL}/get_submission_status/{status_code}'
 
         while True:
-            status_req = request(session, 'GET', url)
+            session.headers = getattr(session, 'headers') or {}
+            session.headers.update({"X-CSRF-Token": csrf_token})
+            resp = request(session, 'GET', url)
+
             try:
-                status_json = status_req.json()
+                status_json = resp.json()
             except ValueError:
                 continue
+
             result_code = status_json['result_code']
 
             if result_code != 'wait':
-                resp = {'data_type': 'text', 'code': 200}
                 if result_code == 'compile':
                     error_msg = get_compilation_error(status_code)
                     compile_error_msg = u'Compilation error.\n{0}'.format(error_msg)
-                    resp['data'] = color_text(compile_error_msg, 'FAIL')
+                    data = style_text(compile_error_msg, 'FAIL')
                 elif result_code == 'runtime':
                     error_msg = status_json['signal']
                     runtime_error_msg = u'Runtime error. {0}\n'.format(error_msg)
-                    resp['data'] = color_text(runtime_error_msg, 'FAIL')
+                    data = style_text(runtime_error_msg, 'FAIL')
                 elif result_code == 'wrong':
-                    resp['data'] = color_text('Wrong answer\n', 'FAIL')
+                    data = style_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':
-                    resp['data'] = 'Correct answer\n'
+                    data = 'Correct answer\n'
+                else:
+                    data = ''
 
-                resps.append(resp)
+                data_rows = html_to_list(get_status_table(status_code))
+                return [
+                    {'data_type': 'text', 'code': 200, 'data': data},
+                    {'data_type': 'table', 'code': 200, 'data': data_rows}
+                ]
+    return [{'code': 503}]
 
-                data_rows = html_to_list(get_error_table(status_code))
-                resps.append({
-                    'data_type': 'table',
-                    'code': 200,
-                    'data': data_rows
-                })
 
-                return resps
-    elif req_obj.status_code == 503:
-        return [{'code': 503}]
+@sort_it
+def get_contest_problems(sort, order, contest_code):
+    url = f'{BASE_URL}/api/contests/{contest_code}?'
+    resp = request(get_session(), 'GET', url)
+
+    try:
+        resp_json = resp.json()
+    except ValueError:
+        return [{"code": 503}]
+
+    if resp_json['status'] == "success":
+        problems_table = [[
+            x.upper() for x in [
+                "Name", "Code", "URL", "Successful Submissions", "Accuracy", "Scorable?"]
+        ]]
+        for _, problem in resp_json['problems'].items():
+            problems_table.append([
+                problem['name'],
+                problem['code'],
+                f"{BASE_URL}{problem['problem_url']}",
+                problem['successful_submissions'],
+                f"{problem['accuracy']} %",
+                "Yes" if problem['category_name'] == 'main' else "No"
+            ])
+
+        return [
+            {'data': f"\n{style_text('Name:', 'BOLD')} {resp_json['name']}\n"},
+            {'data': problems_table, "data_type": "table"},
+            {'data': f'\n{style_text("Announcements", "BOLD")}:\n{resp_json["announcements"]}'}
+        ]
+    elif resp_json['status'] == "error":
+        return [{'data': 'Contest doesn\'t exist.', 'code': 404}]
+    return [{"code": 503}]
 
 
 @sort_it
 def search_problems(sort, order, search_type):
-    """
-    :desc: Retrieves problems of the specific type.
-    :param: `search_type` 'school'/ 'easy'/ 'medium'/ 'hard'/ 'challenge'/ 'extcontest'
-            / contest code (eg: OCT17, nov16, etc.)
-    """
-
-    session = get_session()
-    search_types = ['school', 'easy', 'medium', 'hard', 'challenge', 'extcontest']
-
-    is_contest = False
-    if search_type.lower() in search_types:
-        url = BASE_URL + '/problems/' + search_type.lower()
-    else:
-        url = BASE_URL + '/' + search_type.upper()
-        is_contest = True
-
-    req_obj = request(session, 'GET', url)
-    resp = {'code': 503}
-
-    if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        table_html = str(soup.find_all('table')[1])
-        data_rows = html_to_list(table_html)
-        resp = {
-            'data_type': 'table',
-            'data': data_rows,
-            'code': 200
-        }
-
-        if is_contest:
-            contest_timer_block = soup.find_all('div', attrs={'class': 'rounded-block'})[0]
-            timer_calc_script = contest_timer_block.find_all('script')
-
-            if timer_calc_script:
-                script_text = timer_calc_script[0].text
-                end_date_str = re.search(r'new Date\("([a-zA-Z0-9 ,:]*)"\)', script_text).group(1)
-                end_date_obj = datetime.strptime(end_date_str, '%B %d, %Y %H:%M:%S')
-                now = datetime.now()
-                diff = end_date_obj - now
-
-                days = str(diff.days)
-                hours = str(diff.seconds // 3600)
-                minutes = str((diff.seconds % 3600) // 60)
-                seconds = str((diff.seconds % 3600) % 60)
-
-                time_left_text = color_text('Contest ends in ', 'BOLD') + days + ' days, ' +\
-                    hours + ' hours, ' + minutes + ' minutes, ' + seconds + ' seconds.'
-            else:
-                time_left_text = color_text('Contest ended.', 'BOLD')
-
-            resp['extra'] = time_left_text
-
-    return resp
+    url = f'{BASE_URL}/problems/{search_type.lower()}'
+    resp = request(get_session(), 'GET', url)
+    if resp.status_code == 200:
+        return [{'data_type': 'table', 'data': html_to_list(resp.html.find('table')[1])}]
+    return [{"code": 503}]
 
 
 def get_tags(sort, order, tags):
-    """
-    :desc: Prints all tags or problems tagged with `tags`.
-    :param: `tags` list of input tags
-    :return: `resp` response information dict
-    """
-
     if len(tags) == 0:
         return get_all_tags()
-    else:
-        return get_problem_tags(sort, order, tags)
+    return get_problem_tags(sort, order, tags)
 
 
 def get_all_tags():
-    """
-    :desc: Prints all tags.
-    :return: `resp` response information dict
-    """
+    resp = request(get_session(), 'GET', f'{BASE_URL}/get/tags/problems')
 
-    session = get_session()
-    url = BASE_URL + '/get/tags/problems'
-    req_obj = request(session, 'GET', url)
-    resp = {'code': 503}
+    try:
+        all_tags = resp.json()
+    except ValueError:
+        return [{'code': 503}]
 
-    if req_obj.status_code == 200:
-        all_tags = req_obj.json()
+    if resp.status_code == 200:
         data_rows = []
         num_cols = 5
         row = []
@@ -320,160 +246,114 @@ def get_all_tags():
                 data_rows.append(row)
                 row = [tag_name]
 
-        resp = {'code': 200, 'data': data_rows, 'data_type': 'table'}
+        return [{'data': data_rows, 'data_type': 'table'}]
 
-    return resp
+    return [{'code': 503}]
 
 
 @sort_it
 def get_problem_tags(sort, order, tags):
-    """
-    :desc: Prints problems tagged with `tags`.
-    :params: `tags` list of input tags
-    :return: `resp` response information dict
-    """
+    resp = request(get_session(), 'GET', f'{BASE_URL}/get/tags/problems/{",".join(tags)}')
 
-    session = get_session()
-    url = BASE_URL + '/get/tags/problems/' + ','.join(tags)
-    req_obj = request(session, 'GET', url)
-    resp = {'code': 503}
+    try:
+        all_tags = resp.json()
+    except ValueError:
+        return [{'code': 503}]
 
-    if req_obj.status_code == 200:
-        all_tags = req_obj.json()
+    if resp.status_code == 200:
         data_rows = [PROBLEM_LIST_TABLE_HEADINGS]
         all_tags = all_tags['all_problems']
-        resp = {'code': 200}
 
-        if all_tags == []:
-            resp['code'] = 404
-            resp['extra'] = "Sorry, there are no problems with the following tags!"
-        else:
-            for key, value in all_tags.items():
-                problem_info = []
-                problem_info.append(value.get('code', ''))
-                problem_info.append(value.get('name', ''))
-                problem_info.append(str(value.get('attempted_by', '')))
-                try:
-                    accuracy = (value.get('solved_by') / value.get('attempted_by')) * 100
-                    problem_info.append(str(math.floor(accuracy)))
-                except TypeError:
-                    problem_info.append('')
-                data_rows.append(problem_info)
-            resp['data'] = data_rows
-            resp['data_type'] = 'table'
+        if not all_tags:
+            return [{'code': 404, 'extra': "Sorry, there are no problems with the following tags!"}]
 
-    return resp
+        for _, problem in all_tags.items():
+            problem_info = [
+                problem.get('code', ''),
+                problem.get('name', ''),
+                str(problem.get('attempted_by', ''))
+            ]
+            try:
+                accuracy = (problem.get('solved_by') / problem.get('attempted_by')) * 100
+                problem_info.append(str(math.floor(accuracy)))
+            except TypeError:
+                problem_info.append('')
+            data_rows.append(problem_info)
+
+        return [{'data': data_rows, 'data_type': 'table'}]
+
+    return [{'code': 503}]
 
 
 @sort_it
 def get_ratings(sort, order, country, institution, institution_type, page, lines):
-    """
-    :desc: displays the ratings of users. Result can be filtered according to
-           the country, institution, institution_type and sets. `line` decide the
-           number of lines to be shown. `page` tells which page of the result is to be shown
-    :param: `country` filter for users
-            `institution` filter for users
-            `institution_type` filter for users
-    """
-    session = get_session()
-    url = BASE_URL + '/api/ratings/all?sortBy=global_rank&order=asc'
-    params = {
-        'page': str((page or 1)),
-        'itemsPerPage': str((lines or DEFAULT_NUM_LINES)),
-        'filterBy': ''
-    }
+    csrf_resp = request(get_session(), 'GET', f'{BASE_URL}/ratings/all')
+    if csrf_resp.status_code == 200:
+        csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_SUBMIT_FORM)
+    else:
+        return [{'code': 503}]
 
+    url = f'{BASE_URL}/api/ratings/all?sortBy=global_rank&order=asc'
+    params = {'page': str(page), 'itemsPerPage': str(lines), 'filterBy': ''}
     if country:
-        params['filterBy'] += 'Country=' + country + ";"
+        params['filterBy'] += f'Country={country};'
     if institution:
         institution = institution.title()
-        params['filterBy'] += 'Institution=' + institution + ";"
+        params['filterBy'] += f'Institution={institution};'
     if institution_type:
-        params['filterBy'] += 'Institution type=' + institution_type + ";"
+        params['filterBy'] += f'Institution type={institution_type};'
 
-    req_obj = request(session, 'GET', url, params=params)
-    resp = {'code': 503}
+    session = get_session()
+    session.headers = getattr(session, 'headers') or {}
+    session.headers.update({"X-CSRF-Token": csrf_token})
+    resp = request(session, 'GET', url, params=params)
 
-    if req_obj.status_code == 200:
-        ratings = req_obj.json().get('list')
-        data_rows = [RATINGS_TABLE_HEADINGS]
+    if resp.status_code == 200:
+        try:
+            ratings = resp.json()
+        except ValueError:
+            return [{'code': 503}]
 
-        for user in ratings:
-            temp = []
-            temp.append(str(user['global_rank']) + "(" + str(user['country_rank']) + ")")
-            temp.append(user['username'])
-            temp.append(str(user['rating']))
-            temp.append(str(user['diff']))
-            data_rows.append(temp)
+        ratings = ratings.get('list')
         if len(ratings) == 0:
-            resp = {
-                'code': 404,
-                'data': 'Oops! we don\'t have data.',
-                'data_type': 'text'
-            }
-        else:
-            resp = {
-                'code': 200,
-                'data': data_rows,
-                'data_type': 'table'
-            }
+            return [{'code': 404, 'data': 'No ratings found'}]
 
-        return resp
-    return resp
+        data_rows = [RATINGS_TABLE_HEADINGS]
+        for user in ratings:
+            data_rows.append([
+                f"{str(user['global_rank'])} ({str(user['country_rank'])})",
+                user['username'],
+                str(user['rating']),
+                str(user['diff'])
+            ])
+        return [{'code': 200, 'data': data_rows, 'data_type': 'table'}]
+    return [{'code': 503}]
 
 
-def get_contests(skip_past_contests):
-    """
-    :desc: Retrieves contests.
-    :param: `skip_past_contests` Skips printing past contests, if True
-    :return: `resps` response information array
-    """
+def get_contests(show_past):
+    resp = request(get_session(), 'GET', f'{BASE_URL}/contests')
+    if resp.status_code == 200:
+        tables = resp.html.find('table')
+        labels = ['Present', 'Future']
+        if show_past:
+            labels = ['Past']
+            tables = [tables[0], tables[-1]]
 
-    session = get_session()
-    url = BASE_URL + '/contests'
-    req_obj = request(session, 'GET', url)
-    resps = []
-
-    if req_obj.status_code == 200:
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        tables = soup.find_all('table')
-        labels = ['Present', 'Future', 'Past']
-        limit = 3 if skip_past_contests else 4
-
-        for i in range(1, limit):
-            resps.append({
-                'data': color_text(labels[i-1] + ' Contests:\n', 'BOLD')
-            })
-
-            data_rows = html_to_list(str(tables[i]))
-            resps.append({
-                'data': data_rows,
-                'data_type': 'table'
-            })
-    elif req_obj.status_code == 503:
-        resps = [{'code': 503}]
-
-    return resps
+        resps = []
+        for idx, label in enumerate(labels):
+            resps += [
+                {'data': style_text(f'{label} Contests:\n', 'BOLD')},
+                {'data': html_to_list(tables[idx + 1]), 'data_type': 'table'}
+            ]
+        return resps
+    return [{'code': 503}]
 
 
-@sort_it
-def get_solutions(sort, order, problem_code, page, language, result, username):
-    """
-    :desc: Retrieves solutions list of a problem.
-    :param: `problem_code` Code of the problem.
-            `page` Page Number
-    """
-
-    session = get_session()
+def build_request_params(resp_html, language, result, username, page):
     params = {'page': page - 1} if page != 1 else {}
-    url = BASE_URL + '/status/' + problem_code.upper()
-    INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
-
     if language:
-        req_obj = request(session, 'GET', url)
-        soup = BeautifulSoup(req_obj.text, 'html.parser')
-        lang_dropdown = soup.find('select', id='language')
-        options = lang_dropdown.find_all('option')
+        lang_dropdown = resp_html.find(LANGUAGE_SELECTOR)
+        options = lang_dropdown.find('option')
 
         for option in options:
             if language.upper() == option.text.strip().upper():
@@ -483,51 +363,47 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
         params['status'] = RESULT_CODES[result.upper()]
     if username:
         params['handle'] = username
+    return params
 
-    req_obj = request(session, 'GET', url, params=params)
 
-    if req_obj.status_code == 200:
-        if 'SUBMISSIONS FOR ' in req_obj.text:
-            soup = BeautifulSoup(req_obj.text, 'html.parser')
-            solution_table = soup.find_all('table')[2]
-            page_info = soup.find('div', attrs={'class': 'pageinfo'})
-            resp = {
-                'code': 200,
-                'data_type': 'table'
-            }
+@sort_it
+def get_solutions(sort, order, problem_code, page, language, result, username):
+    session = get_session()
+    url = f'{BASE_URL}/status/{problem_code.upper()}'
+    resp = request(session, 'GET', url)
 
-            rows = solution_table.find_all('tr')
-            headings = rows[0].find_all('th')
-            headings[-1].extract()
+    params = build_request_params(resp.html, language, result, username, page)
+    resp = request(session, 'GET', url, params=params)
 
-            for row in rows[1:]:
-                cols = row.find_all('td')
-                cols[-1].extract()
+    if resp.status_code == 200:
+        if problem_code in resp.url:
+            resp_html = resp.html
+            solution_table = resp_html.find('table')[2]
+            page_info = resp_html.find(PAGE_INFO_CLASS, first=True)
 
-            data_rows = html_to_list(str(solution_table))
-            resp['data'] = data_rows
+            data_rows = html_to_list(solution_table)
+            for row in data_rows:
+                # remove view solution column
+                del row[-1]
 
+                # format result column
+                row[3] = ' '.join(row[3].split('\n'))
+
+            resp = {'code': 200, 'data_type': 'table', 'data': data_rows}
             if page_info:
                 resp['extra'] = '\nPage: ' + page_info.text
+
+            return [resp]
         else:
-            resp = {
+            return [{
                 'code': 404,
                 'data': INVALID_PROBLEM_CODE_MSG,
                 'data_type': 'text'
-            }
-    elif req_obj.status_code == 503:
-        resp = {'code': 503}
-
-    return resp
+            }]
+    return [{'code': 503}]
 
 
 def get_solution(solution_code):
-    """
-    :desc: Retrieves a solution
-    :param: `solution_code` Code of the solution.
-    :return: `resps` response information array
-    """
-
     session = get_session(fake_browser=True)
     url = BASE_URL + '/viewsolution/' + solution_code
     req_obj = request(session, 'GET', url)
@@ -535,7 +411,6 @@ def get_solution(solution_code):
 
     if req_obj.status_code == 200:
         if 'Solution: ' + solution_code in req_obj.text:
-            soup = BeautifulSoup(req_obj.text, 'html.parser')
 
             ol = soup.find('ol')
             lis = ol.find_all('li')
@@ -545,8 +420,8 @@ def get_solution(solution_code):
             for li in lis:
                 code += li.text + '\n'
 
-            headings = '\n' + color_text('Solution:', 'BOLD') + '\n' +\
-                       code + '\n' + color_text('Submission Info:', 'BOLD') + '\n'
+            headings = '\n' + style_text('Solution:', 'BOLD') + '\n' +\
+                       code + '\n' + style_text('Submission Info:', 'BOLD') + '\n'
             resps.append({
                 'data': headings,
                 'pager': True
