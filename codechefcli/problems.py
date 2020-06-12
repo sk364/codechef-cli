@@ -1,6 +1,5 @@
 import math
 import re
-from datetime import datetime
 
 from requests_html import HTML
 
@@ -49,7 +48,7 @@ def get_description(problem_code, contest_code):
         ]
         if resp_json.get('tags'):
             problem.append(
-                style_text('Tags: ', 'BOLD') + \
+                style_text('Tags: ', 'BOLD') +
                 " ".join([tag.text for tag in HTML(html=resp_json['tags']).find('a')])
             )
             problem.append('')
@@ -384,54 +383,21 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
                 # format result column
                 row[3] = ' '.join(row[3].split('\n'))
 
-            resp = {'code': 200, 'data_type': 'table', 'data': data_rows}
+            resp = {'data_type': 'table', 'data': data_rows}
             if page_info:
-                resp['extra'] = '\nPage: ' + page_info.text
+                resp['extra'] = f'\nPage: {page_info.text}'
 
             return [resp]
         else:
-            return [{
-                'code': 404,
-                'data': INVALID_PROBLEM_CODE_MSG,
-                'data_type': 'text'
-            }]
+            return [{'code': 404, 'data': INVALID_PROBLEM_CODE_MSG}]
     return [{'code': 503}]
 
 
 def get_solution(solution_code):
-    session = get_session(fake_browser=True)
-    url = BASE_URL + '/viewsolution/' + solution_code
-    req_obj = request(session, 'GET', url)
-    resps = []
-
-    if req_obj.status_code == 200:
-        if 'Solution: ' + solution_code in req_obj.text:
-
-            ol = soup.find('ol')
-            lis = ol.find_all('li')
-            status_table = soup.find('table', attrs={'class': 'status-table'})
-
-            code = ''
-            for li in lis:
-                code += li.text + '\n'
-
-            headings = '\n' + style_text('Solution:', 'BOLD') + '\n' +\
-                       code + '\n' + style_text('Submission Info:', 'BOLD') + '\n'
-            resps.append({
-                'data': headings,
-                'pager': True
-            })
-
-            data_rows = html_to_list(str(status_table))
-            resps.append({
-                'data': data_rows,
-                'data_type': 'table'
-            })
+    resp = request(get_session(), 'GET', f'{BASE_URL}/viewplaintext/{solution_code}')
+    if resp.status_code == 200:
+        if resp.html.find('.err-message') == "Invalid solution ID":
+            return [{'code': 404, "data": "Invalid Solution ID"}]
         else:
-            resps = [{'data': 'Invalid Solution Code.', 'code': 404}]
-    elif req_obj.status_code == 403:
-        resps = [{'code': 400, 'data': 'Access Denied!'}]
-    elif req_obj.status_code == 503:
-        resps = [{'code': 503}]
-
-    return resps
+            return [{'data': f'\n{resp.html.find("pre", first=True).element.text}\n'}]
+    return [{'code': 503}]

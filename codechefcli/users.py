@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
-
 from codechefcli.teams import get_team_url
 from codechefcli.utils.constants import BASE_URL
 from codechefcli.utils.helpers import get_session, request, style_text
@@ -29,7 +27,7 @@ def get_user(username):
         team_url = get_team_url(username)
         if resp.url == team_url:
             return [{
-                'data': 'This is a team handle. Run `codechefcli --team {username}` to get team info\n',
+                'data': 'This is a team handle. Run `codechefcli --team {name}` to get team info\n',
                 'code': 400
             }]
         elif resp.url.rstrip('/') == BASE_URL:
