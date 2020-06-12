@@ -1,4 +1,4 @@
-# CodeChef CLI [![PyPI version](https://badge.fury.io/py/codechefcli.svg)](https://badge.fury.io/py/codechefcli) [![Build Status](https://api.travis-ci.org/sk364/codechef-cli.svg?branch=master)](https://api.travis-ci.org/sk364/codechef-cli)
+# CodeChef CLI [![PyPI version](https://badge.fury.io/py/codechefcli.svg)](https://badge.fury.io/py/codechefcli) [![Build Status](https://travis-ci.org/sk364/codechef-cli.svg?branch=master)](https://travis-ci.org/sk364/codechef-cli)
 
 A command-line tool for querying and submitting problems on [CodeChef](https://www.codechef.com/).
 
