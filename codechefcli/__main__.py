@@ -10,12 +10,6 @@ from codechefcli.problems import (RESULT_CODES, get_contest_problems,
 from codechefcli.teams import get_team
 from codechefcli.users import get_user
 
-# Supporting input in Python 2/3
-try:
-    input = raw_input
-except NameError:
-    pass
-
 GENERIC_RESP = {"code": 500, "data": "Unexpected stuff is happening here"}
 CC_PRACTICE = "PRACTICE"
 SEARCH_TYPES = ['school', 'easy', 'medium', 'hard', 'challenge', 'extcontest']

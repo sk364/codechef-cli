@@ -1,16 +1,12 @@
 import os
 import sys
+from http.cookiejar import Cookie, LWPCookieJar
 from os.path import expanduser
 from pydoc import pager
 
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
-
-try:
-    from http.cookiejar import Cookie, LWPCookieJar
-except ImportError:
-    from cookielib import Cookie, LWPCookieJar
 
 MIN_NUM_SPACES = 3
 BASE_URL = 'https://www.codechef.com'
