@@ -20,7 +20,7 @@ setup(
     entry_points={"console_scripts": ['codechefcli = codechefcli.__main__:main']},
     install_requires=['requests_html'],
     python_requires='>=3.6',
-    version='0.5.0',
+    version='0.5.1',
     url='http://www.github.com/sk364/codechef-cli',
     keywords="codechefcli codechef cli programming competitive-programming competitive-coding",
     license='GNU',
