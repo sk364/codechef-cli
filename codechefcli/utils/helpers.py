@@ -1,14 +1,11 @@
 import os
 import sys
+from os.path import expanduser
 from pydoc import pager
 
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
-
-from codechefcli.utils.constants import (BCOLORS, COOKIES_FILE_PATH,
-                                         INTERNET_DOWN_MSG, SERVER_DOWN_MSG,
-                                         UNAUTHORIZED_MSG, USER_AGENT)
 
 try:
     from http.cookiejar import Cookie, LWPCookieJar
@@ -16,13 +13,25 @@ except ImportError:
     from cookielib import Cookie, LWPCookieJar
 
 MIN_NUM_SPACES = 3
+BASE_URL = 'https://www.codechef.com'
+SERVER_DOWN_MSG = 'Please try again later. Seems like CodeChef server is down!'
+INTERNET_DOWN_MSG = 'Nothing to show. Check your internet connection.'
+UNAUTHORIZED_MSG = 'You are not logged in.'
+COOKIES_FILE_PATH = expanduser('~') + '/.cookies'
+BCOLORS = {
+    'HEADER': '\033[95m',
+    'BLUE': '\033[94m',
+    'GREEN': '\033[92m',
+    'WARNING': '\033[93m',
+    'FAIL': '\033[91m',
+    'ENDC': '\033[0m',
+    'BOLD': '\033[1m',
+    'UNDERLINE': '\033[4m'
+}
 
 
-def get_session(fake_browser=False):
+def get_session():
     session = HTMLSession()
-
-    if fake_browser:
-        session.headers = {'User-Agent': USER_AGENT}
 
     if os.path.exists(COOKIES_FILE_PATH):
         session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
@@ -51,7 +60,7 @@ def get_username():
     return None
 
 
-def request(session, method, url, **kwargs):
+def request(session, method="GET", url="", **kwargs):
     try:
         return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
@@ -98,22 +107,6 @@ def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
     print(table_str)
 
 
-def print_inverse_table(table, min_num_spaces=MIN_NUM_SPACES):
-    if not table:
-        return
-
-    data = []
-    for row in table.find('tr'):
-        _row = []
-        for col in row.find('td'):
-            _row.append(' '.join(col.text.strip().split()) + min_num_spaces * ' ')
-        data.append("".join(_row))
-
-    data_str = "\n".join(data)
-    pager(data_str)
-    print(data_str)
-
-
 def style_text(text, color=None):
     if color is None:
         return text
@@ -121,16 +114,13 @@ def style_text(text, color=None):
     return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
 
 
-def print_response_util(data, extra, data_type, color, is_pager=False, inverse=False):
+def print_response_util(data, extra, data_type, color, is_pager=False):
     if data is None and extra is None:
         print(style_text('Nothing to show.', 'WARNING'))
 
     if data is not None:
         if data_type == 'table':
-            if inverse:
-                print_inverse_table(data)
-            else:
-                print_table(data)
+            print_table(data)
         elif data_type == 'text':
             if is_pager:
                 pager(style_text(data, color))
@@ -140,19 +130,21 @@ def print_response_util(data, extra, data_type, color, is_pager=False, inverse=F
         print(style_text(extra, color))
 
 
-def print_response(data_type='text', code=200, data=None, extra=None, pager=False, inverse=False):
+def print_response(data_type='text', code=200, data=None, extra=None, pager=False):
     color = None
 
     if code == 503:
-        data = SERVER_DOWN_MSG
+        if not data:
+            data = SERVER_DOWN_MSG
         color = 'FAIL'
     elif code == 404 or code == 400:
         color = 'WARNING'
     elif code == 401:
         color = 'FAIL'
-        data = UNAUTHORIZED_MSG
+        if not data:
+            data = UNAUTHORIZED_MSG
 
-    print_response_util(data, extra, data_type, color, is_pager=pager, inverse=inverse)
+    print_response_util(data, extra, data_type, color, is_pager=pager)
 
 
 def get_csrf_token(rhtml, selector):

@@ -5,8 +5,8 @@ from requests_html import HTML
 
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
-from codechefcli.utils.constants import BASE_URL, SERVER_DOWN_MSG
-from codechefcli.utils.helpers import (get_csrf_token, get_session,
+from codechefcli.utils.helpers import (BASE_URL, SERVER_DOWN_MSG,
+                                       get_csrf_token, get_session,
                                        html_to_list, request, style_text)
 
 CSRF_TOKEN_SUBMIT_FORM = "edit-csrfToken"
@@ -24,8 +24,8 @@ RATINGS_TABLE_HEADINGS = ['GLOBAL(COUNTRY)', 'USER NAME', 'RATING', 'GAIN/LOSS']
 
 
 def get_description(problem_code, contest_code):
-    url = f'{BASE_URL}/api/contests/{contest_code}/problems/{problem_code}'
-    resp = request(get_session(), 'GET', url)
+    url = f'/api/contests/{contest_code}/problems/{problem_code}'
+    resp = request(get_session(), url=url)
 
     try:
         resp_json = resp.json()
@@ -73,13 +73,13 @@ def get_form_token(rhtml):
 
 
 def get_status_table(status_code):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/error_status_table/{status_code}')
+    resp = request(get_session(), url=f'/error_status_table/{status_code}')
     if resp.status_code == 200:
         return resp.html
 
 
 def get_compilation_error(status_code):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/view/error/{status_code}')
+    resp = request(get_session(), url=f'/view/error/{status_code}')
     if resp.status_code == 200:
         return resp.html.find(COMPILATION_ERROR_CLASS, first=True).text
     return SERVER_DOWN_MSG
@@ -96,8 +96,8 @@ def get_language_code(rhtml, language):
 @login_required
 def submit_problem(problem_code, solution_file, language):
     session = get_session()
-    url = f'{BASE_URL}/submit/{problem_code}'
-    get_resp = request(session, 'GET', url)
+    url = f'/submit/{problem_code}'
+    get_resp = request(session, url=url)
 
     if not is_logged_in(get_resp):
         return [{"code": 401, "data": "This session has been disconnected. Login again."}]
@@ -126,17 +126,17 @@ def submit_problem(problem_code, solution_file, language):
     }
     files = {'files[sourcefile]': solution_file_obj}
 
-    post_resp = request(get_session(), 'POST', url, data=data, files=files)
+    post_resp = request(get_session(), method='POST', url=url, data=data, files=files)
     if post_resp.status_code == 200:
         print(style_text('Running code...\n', 'BLUE'))
 
         status_code = post_resp.url.split('/')[-1]
-        url = f'{BASE_URL}/get_submission_status/{status_code}'
+        url = f'/get_submission_status/{status_code}'
 
         while True:
             session.headers = getattr(session, 'headers') or {}
             session.headers.update({"X-CSRF-Token": csrf_token})
-            resp = request(session, 'GET', url)
+            resp = request(session, url=url)
 
             try:
                 status_json = resp.json()
@@ -171,8 +171,8 @@ def submit_problem(problem_code, solution_file, language):
 
 @sort_it
 def get_contest_problems(sort, order, contest_code):
-    url = f'{BASE_URL}/api/contests/{contest_code}?'
-    resp = request(get_session(), 'GET', url)
+    url = f'/api/contests/{contest_code}?'
+    resp = request(get_session(), url=url)
 
     try:
         resp_json = resp.json()
@@ -206,8 +206,8 @@ def get_contest_problems(sort, order, contest_code):
 
 @sort_it
 def search_problems(sort, order, search_type):
-    url = f'{BASE_URL}/problems/{search_type.lower()}'
-    resp = request(get_session(), 'GET', url)
+    url = f'/problems/{search_type.lower()}'
+    resp = request(get_session(), url=url)
     if resp.status_code == 200:
         return [{'data_type': 'table', 'data': html_to_list(resp.html.find('table')[1])}]
     return [{"code": 503}]
@@ -220,7 +220,7 @@ def get_tags(sort, order, tags):
 
 
 def get_all_tags():
-    resp = request(get_session(), 'GET', f'{BASE_URL}/get/tags/problems')
+    resp = request(get_session(), url='/get/tags/problems')
 
     try:
         all_tags = resp.json()
@@ -247,7 +247,7 @@ def get_all_tags():
 
 @sort_it
 def get_problem_tags(sort, order, tags):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/get/tags/problems/{",".join(tags)}')
+    resp = request(get_session(), url=f'/get/tags/problems/{",".join(tags)}')
 
     try:
         all_tags = resp.json()
@@ -281,13 +281,13 @@ def get_problem_tags(sort, order, tags):
 
 @sort_it
 def get_ratings(sort, order, country, institution, institution_type, page, lines):
-    csrf_resp = request(get_session(), 'GET', f'{BASE_URL}/ratings/all')
+    csrf_resp = request(get_session(), url='/ratings/all')
     if csrf_resp.status_code == 200:
         csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_SUBMIT_FORM)
     else:
         return [{'code': 503}]
 
-    url = f'{BASE_URL}/api/ratings/all?sortBy=global_rank&order=asc'
+    url = '/api/ratings/all?sortBy=global_rank&order=asc'
     params = {'page': str(page), 'itemsPerPage': str(lines), 'filterBy': ''}
     if country:
         params['filterBy'] += f'Country={country};'
@@ -300,7 +300,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
     session = get_session()
     session.headers = getattr(session, 'headers') or {}
     session.headers.update({"X-CSRF-Token": csrf_token})
-    resp = request(session, 'GET', url, params=params)
+    resp = request(session, url=url, params=params)
 
     if resp.status_code == 200:
         try:
@@ -325,7 +325,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
 
 
 def get_contests(show_past):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/contests')
+    resp = request(get_session(), url='/contests')
     if resp.status_code == 200:
         tables = resp.html.find('table')
         labels = ['Present', 'Future']
@@ -363,11 +363,11 @@ def build_request_params(resp_html, language, result, username, page):
 @sort_it
 def get_solutions(sort, order, problem_code, page, language, result, username):
     session = get_session()
-    url = f'{BASE_URL}/status/{problem_code.upper()}'
-    resp = request(session, 'GET', url)
+    url = f'/status/{problem_code.upper()}'
+    resp = request(session, url=url)
 
     params = build_request_params(resp.html, language, result, username, page)
-    resp = request(session, 'GET', url, params=params)
+    resp = request(session, url=url, params=params)
 
     if resp.status_code == 200:
         if problem_code in resp.url:
@@ -394,7 +394,7 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
 
 
 def get_solution(solution_code):
-    resp = request(get_session(), 'GET', f'{BASE_URL}/viewplaintext/{solution_code}')
+    resp = request(get_session(), url=f'/viewplaintext/{solution_code}')
     if resp.status_code == 200:
         if resp.html.find('.err-message') == "Invalid solution ID":
             return [{'code': 404, "data": "Invalid Solution ID"}]
