@@ -6,14 +6,9 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
 
-from codechefcli.utils.constants import (
-    BCOLORS,
-    COOKIES_FILE_PATH,
-    INTERNET_DOWN_MSG,
-    SERVER_DOWN_MSG,
-    UNAUTHORIZED_MSG,
-    USER_AGENT
-)
+from codechefcli.utils.constants import (BCOLORS, COOKIES_FILE_PATH,
+                                         INTERNET_DOWN_MSG, SERVER_DOWN_MSG,
+                                         UNAUTHORIZED_MSG, USER_AGENT)
 
 try:
     from http.cookiejar import Cookie, LWPCookieJar

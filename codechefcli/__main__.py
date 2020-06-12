@@ -2,22 +2,13 @@ import argparse
 import sys
 
 from codechefcli.auth import login, logout
-from codechefcli.problems import (
-    get_contests,
-    get_description,
-    get_ratings,
-    get_solution,
-    get_solutions,
-    get_tags,
-    search_problems,
-    submit_problem,
-    get_contest_problems,
-    RESULT_CODES
-)
+from codechefcli.problems import (RESULT_CODES, get_contest_problems,
+                                  get_contests, get_description, get_ratings,
+                                  get_solution, get_solutions, get_tags,
+                                  search_problems, submit_problem)
 from codechefcli.teams import get_team
 from codechefcli.users import get_user
 from codechefcli.utils.helpers import print_response
-
 
 # Supporting input in Python 2/3
 try:

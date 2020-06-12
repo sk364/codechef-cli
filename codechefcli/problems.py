@@ -7,13 +7,8 @@ from requests_html import HTML
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
 from codechefcli.utils.constants import BASE_URL, SERVER_DOWN_MSG
-from codechefcli.utils.helpers import (
-    style_text,
-    get_session,
-    html_to_list,
-    request,
-    get_csrf_token
-)
+from codechefcli.utils.helpers import (get_csrf_token, get_session,
+                                       html_to_list, request, style_text)
 
 CSRF_TOKEN_SUBMIT_FORM = "edit-csrfToken"
 LANGUAGE_SELECTOR = "#language"
