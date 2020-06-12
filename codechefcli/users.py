@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from codechefcli.teams import get_team_url
-from codechefcli.utils.constants import BASE_URL
 from codechefcli.utils.helpers import get_session, request, style_text
 
 HEADER = 'header'

@@ -1,4 +1,3 @@
-from codechefcli.utils.constants import BASE_URL
 from codechefcli.utils.helpers import get_session, request
 
 
