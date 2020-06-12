@@ -220,7 +220,7 @@ def get_tags(sort, order, tags):
 
 
 def get_all_tags():
-    resp = request(get_session(), url=f'/get/tags/problems')
+    resp = request(get_session(), url='/get/tags/problems')
 
     try:
         all_tags = resp.json()
@@ -281,13 +281,13 @@ def get_problem_tags(sort, order, tags):
 
 @sort_it
 def get_ratings(sort, order, country, institution, institution_type, page, lines):
-    csrf_resp = request(get_session(), url=f'/ratings/all')
+    csrf_resp = request(get_session(), url='/ratings/all')
     if csrf_resp.status_code == 200:
         csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_SUBMIT_FORM)
     else:
         return [{'code': 503}]
 
-    url = f'/api/ratings/all?sortBy=global_rank&order=asc'
+    url = '/api/ratings/all?sortBy=global_rank&order=asc'
     params = {'page': str(page), 'itemsPerPage': str(lines), 'filterBy': ''}
     if country:
         params['filterBy'] += f'Country={country};'
@@ -325,7 +325,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
 
 
 def get_contests(show_past):
-    resp = request(get_session(), url=f'/contests')
+    resp = request(get_session(), url='/contests')
     if resp.status_code == 200:
         tables = resp.html.find('table')
         labels = ['Present', 'Future']
