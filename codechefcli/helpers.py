@@ -62,7 +62,7 @@ def get_username():
 
 def request(session, method="GET", url="", **kwargs):
     try:
-        return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
+        return session.request(method=method, url=f'{BASE_URL}{url}', timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
         print(INTERNET_DOWN_MSG)
         sys.exit(1)
