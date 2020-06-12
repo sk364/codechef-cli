@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+
 import sys
 from codecs import open
+from setuptools import setup
 
-if sys.version < '2.0.0':
-    print("Python 1 not supported...")
+if sys.version < '3.6':
+    print("This version is not supported.")
     sys.exit(1)
 
 with open('README.rst') as f:
@@ -20,7 +18,7 @@ setup(
     data_files=[('codechefcli', [])],
     entry_points={"console_scripts": ['codechefcli = codechefcli.__main__:main']},
     install_requires=['requests_html'],
-    python_requires='>=2.7',
+    python_requires='>=3.6',
     version='0.4.4',
     url='http://www.github.com/sk364/codechef-cli',
     keywords="codechefcli codechef cli programming competitive-programming competitive-coding",
