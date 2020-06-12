@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from codechefcli.helpers import BASE_URL, get_session, request, style_text
 from codechefcli.teams import get_team_url
-from codechefcli.utils.helpers import (BASE_URL, get_session, request,
-                                       style_text)
 
 HEADER = 'header'
 RATING_NUMBER_CLASS = '.rating-number'

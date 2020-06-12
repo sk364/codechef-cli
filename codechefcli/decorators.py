@@ -1,7 +1,7 @@
 import os
 from functools import wraps
 
-from codechefcli.utils.helpers import COOKIES_FILE_PATH
+from codechefcli.helpers import COOKIES_FILE_PATH
 
 try:
     from http.cookiejar import LWPCookieJar

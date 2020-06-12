@@ -1,4 +1,4 @@
-from codechefcli.utils.helpers import get_session, request
+from codechefcli.helpers import get_session, request
 
 
 def get_team_url(name):

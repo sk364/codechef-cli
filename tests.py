@@ -2,11 +2,11 @@ import unittest
 
 from codechefcli import __main__ as entry_point
 from codechefcli.auth import login, logout
+from codechefcli.helpers import get_session
 from codechefcli.utils.constants import (EMPTY_AUTH_DATA_MSG,
                                          INCORRECT_CREDS_MSG,
                                          LOGIN_SUCCESS_MSG, LOGOUT_SUCCESS_MSG,
                                          SESSION_LIMIT_MSG)
-from codechefcli.utils.helpers import get_session
 
 TEST_USERNAME = 'yesnoyes'
 TEST_PASSWORD = 'abcdabcd'
