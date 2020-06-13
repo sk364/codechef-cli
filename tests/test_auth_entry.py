@@ -4,13 +4,13 @@ from _pytest.monkeypatch import MonkeyPatch
 from requests_html import HTML
 
 from codechefcli import __main__ as entry_point
-from codechefcli import problems
+from codechefcli import auth
 from codechefcli.auth import (CSRF_TOKEN_MISSING, EMPTY_AUTH_DATA_MSG,
                               INCORRECT_CREDS_MSG, LOGIN_SUCCESS_MSG,
-                              LOGOUT_BUTTON_CLASS, LOGOUT_SUCCESS_MSG,
-                              SESSION_LIMIT_FORM_ID, SESSION_LIMIT_MSG,
-                              disconnect_active_sessions, login, logout)
-from codechefcli.helpers import CSRF_TOKEN_INPUT_ID, get_session
+                              LOGOUT_BUTTON_CLASS, SESSION_LIMIT_FORM_ID,
+                              SESSION_LIMIT_MSG, disconnect_active_sessions,
+                              login)
+from codechefcli.helpers import CSRF_TOKEN_INPUT_ID
 
 
 class MockHTMLResponse:
@@ -78,7 +78,7 @@ class LoginTests(unittest.TestCase):
         """Should return incorrect creds message"""
         def mock_request(*args, **kwargs):
             if kwargs.get('method'):
-                return MockHTMLResponse(data=f'<button>Login</button>')
+                return MockHTMLResponse(data='<button>Login</button>')
             else:
                 return MockHTMLResponse(data=f"<input id='{CSRF_TOKEN_INPUT_ID}' value='ab' />")
 
@@ -91,7 +91,7 @@ class LoginTests(unittest.TestCase):
     def test_no_csrf_token(self):
         """Should return csrf token missing message when there isn't one in the response html"""
         def mock_request(*args, **kwargs):
-            return MockHTMLResponse(data=f"<input id='invalid-token-id' value='aaa' />")
+            return MockHTMLResponse(data="<input id='invalid-token-id' value='aaa' />")
         self.monkeypatch.setattr(auth, 'request', mock_request)
 
         resps = login(username='cc', password='cc', disconnect_sessions=False)
@@ -169,7 +169,7 @@ class LoginTests(unittest.TestCase):
         resps = disconnect_active_sessions(None, html)
         self.assertEqual(resps[0]['data'], LOGIN_SUCCESS_MSG)
 
-    def test_disconnect_active_sessions_success(self):
+    def test_disconnect_active_sessions_error(self):
         """Should return 503 when status code is not 200"""
         def mock_request(*args, **kwargs):
             return MockHTMLResponse(status_code=500)
