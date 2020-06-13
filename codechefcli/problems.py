@@ -5,10 +5,10 @@ from requests_html import HTML
 
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
-from codechefcli.helpers import (BASE_URL, SERVER_DOWN_MSG, get_csrf_token,
-                                 html_to_list, request, style_text)
+from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID,
+                                 SERVER_DOWN_MSG, get_csrf_token, html_to_list,
+                                 request, style_text)
 
-CSRF_TOKEN_SUBMIT_FORM = "edit-csrfToken"
 LANGUAGE_SELECTOR = "#language"
 INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
 PAGE_INFO_CLASS = '.pageinfo'
@@ -106,7 +106,7 @@ def submit_problem(problem_code, solution_file, language):
         rhtml = get_resp.html
         form_token = get_form_token(rhtml)
         language_code = get_language_code(rhtml, language)
-        csrf_token = get_csrf_token(rhtml, CSRF_TOKEN_SUBMIT_FORM)
+        csrf_token = get_csrf_token(rhtml, CSRF_TOKEN_INPUT_ID)
 
         if language_code is None:
             return [{'code': 400, 'data': 'Invalid language.'}]
@@ -283,7 +283,7 @@ def get_problem_tags(sort, order, tags):
 def get_ratings(sort, order, country, institution, institution_type, page, lines):
     csrf_resp = request(url='/ratings/all')
     if csrf_resp.status_code == 200:
-        csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_SUBMIT_FORM)
+        csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_INPUT_ID)
     else:
         return [{'code': 503}]
 

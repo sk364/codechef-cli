@@ -175,15 +175,17 @@ def main(argv=None):
         else:
             parser.print_help()
 
-        if resps:
-            for resp in resps:
-                print_response(**resp)
-        else:
-            print_response(**GENERIC_RESP)
+        if not resps:
+            resps = [GENERIC_RESP]
+
+        for resp in resps:
+            print_response(**resp)
+        return resps
     except KeyboardInterrupt:
         print('\nBye.')
-    return 0
+        return [{"data": "\nBye."}]
+    return [{"data": "0"}]
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    main(sys.argv)

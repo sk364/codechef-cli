@@ -4,11 +4,10 @@ from getpass import getpass
 from requests_html import HTMLSession
 
 from codechefcli.decorators import login_required
-from codechefcli.helpers import (COOKIES_FILE_PATH, get_csrf_token,
-                                 init_session_cookie, request,
+from codechefcli.helpers import (COOKIES_FILE_PATH, CSRF_TOKEN_INPUT_ID,
+                                 get_csrf_token, init_session_cookie, request,
                                  set_session_cookies)
 
-CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 CSRF_TOKEN_MISSING = 'No CSRF Token found'
 SESSION_LIMIT_FORM_ID = '#session-limit-page'
 LOGIN_FORM_ID = '#new_login_form'
@@ -61,7 +60,7 @@ def make_login_req(username, password, disconnect_sessions):
         resp = request(session=session)
         token = get_csrf_token(resp.html, CSRF_TOKEN_INPUT_ID)
         if not token:
-            return [{'resps': CSRF_TOKEN_MISSING, 'code': 500}]
+            return [{'data': CSRF_TOKEN_MISSING, 'code': 500}]
 
         data = {
             'name': username,
@@ -76,9 +75,9 @@ def make_login_req(username, password, disconnect_sessions):
         if resp.status_code == 200:
             if resp_html.find(SESSION_LIMIT_FORM_ID):
                 if disconnect_sessions:
-                    disconnect_active_sessions(session, resp_html)
+                    resps = disconnect_active_sessions(session, resp_html)
                     save_session_cookies(session, username)
-                    return [{'data': LOGIN_SUCCESS_MSG}]
+                    return resps
                 else:
                     logout(session=session)
                     return [{'data': SESSION_LIMIT_MSG, 'code': 400}]
@@ -86,14 +85,13 @@ def make_login_req(username, password, disconnect_sessions):
                 save_session_cookies(session, username)
                 return [{'data': LOGIN_SUCCESS_MSG}]
             return [{'data': INCORRECT_CREDS_MSG, 'code': 400}]
-        elif resp.status_code == 503:
-            return [{'code': 503}]
+        return [{'code': 503}]
 
 
 def login(username=None, password=None, disconnect_sessions=False):
-    if not username:
+    if username is None:
         username = input('Username: ')
-    if not password:
+    if password is None:
         password = getpass()
 
     if username and password:

@@ -8,6 +8,7 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
 
+CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 MIN_NUM_SPACES = 3
 BASE_URL = 'https://www.codechef.com'
 SERVER_DOWN_MSG = 'Please try again later. Seems like CodeChef server is down!'
