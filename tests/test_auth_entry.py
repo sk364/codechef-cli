@@ -4,7 +4,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from requests_html import HTML
 
 from codechefcli import __main__ as entry_point
-from codechefcli import auth, problems
+from codechefcli import problems
 from codechefcli.auth import (CSRF_TOKEN_MISSING, EMPTY_AUTH_DATA_MSG,
                               INCORRECT_CREDS_MSG, LOGIN_SUCCESS_MSG,
                               LOGOUT_BUTTON_CLASS, LOGOUT_SUCCESS_MSG,
@@ -52,12 +52,6 @@ class LoginTests(unittest.TestCase):
 
     def test_empty_auth_data(self):
         """Should return empty auth data message"""
-        def mock_input(*args, **kwargs):
-            return ''
-
-        auth.input = mock_input
-        auth.getpass = mock_input
-
         resps = login(username='', password='', disconnect_sessions=False)
         self.assertEqual(resps[0]['data'], EMPTY_AUTH_DATA_MSG)
         self.assertEqual(resps[0]['code'], 400)
