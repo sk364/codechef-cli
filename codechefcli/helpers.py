@@ -64,8 +64,11 @@ def request(session=None, method="GET", url="", token=None, **kwargs):
         session.headers = getattr(session, 'headers') or {}
         session.headers.update({'X-CSRF-Token': token})
 
+    if BASE_URL not in url:
+        url = f'{BASE_URL}{url}'
+
     try:
-        return session.request(method=method, url=f'{BASE_URL}{url}', timeout=(15, 15), **kwargs)
+        return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
         print(INTERNET_DOWN_MSG)
         sys.exit(1)
@@ -76,7 +79,7 @@ def html_to_list(table):
         return []
 
     rows = table.find('tr')
-    data_rows = [[header.text.strip().upper() for header in rows[0].find('th')]]
+    data_rows = [[header.text.strip().upper() for header in rows[0].find('th, td')]]
     for row in rows[1:]:
         data_rows.append([col.text.strip() for col in row.find('td')])
     return data_rows
@@ -91,7 +94,7 @@ def get_col_max_lengths(data_rows, num_cols):
     return max_len_in_cols
 
 
-def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
+def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES, is_pager=True):
     if len(data_rows) == 0:
         return
 
@@ -106,7 +109,8 @@ def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
         table.append("".join(_row))
 
     table_str = '\n\n'.join(table)
-    pager(table_str)
+    if is_pager:
+        pager(table_str)
     print(table_str)
 
 
@@ -117,13 +121,13 @@ def style_text(text, color=None):
     return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
 
 
-def print_response_util(data, extra, data_type, color, is_pager=False):
+def print_response_util(data, extra, data_type, color, is_pager=True):
     if data is None and extra is None:
         print(style_text('Nothing to show.', 'WARNING'))
 
     if data is not None:
         if data_type == 'table':
-            print_table(data)
+            print_table(data, is_pager=is_pager)
         elif data_type == 'text':
             if is_pager:
                 pager(style_text(data, color))
@@ -133,7 +137,7 @@ def print_response_util(data, extra, data_type, color, is_pager=False):
         print(style_text(extra, color))
 
 
-def print_response(data_type='text', code=200, data=None, extra=None, pager=False):
+def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
     color = None
 
     if code == 503:
@@ -147,7 +151,13 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
         if not data:
             data = UNAUTHORIZED_MSG
 
-    print_response_util(data, extra, data_type, color, is_pager=pager)
+    is_pager = False
+    if not hasattr(kwargs, 'is_pager') and data_type == 'table':
+        is_pager = True
+    else:
+        is_pager = kwargs.get('is_pager', False)
+
+    print_response_util(data, extra, data_type, color, is_pager=is_pager)
 
 
 def get_csrf_token(rhtml, selector):
