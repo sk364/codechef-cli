@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase
 
 from _pytest.monkeypatch import MonkeyPatch
 from requests_html import HTML
@@ -11,15 +11,10 @@ from codechefcli.auth import (CSRF_TOKEN_MISSING, EMPTY_AUTH_DATA_MSG,
                               SESSION_LIMIT_MSG, disconnect_active_sessions,
                               login)
 from codechefcli.helpers import CSRF_TOKEN_INPUT_ID
+from tests.utils import MockHTMLResponse
 
 
-class MockHTMLResponse:
-    def __init__(self, data='<html />', status_code=200):
-        self.html = HTML(html=data)
-        self.status_code = status_code
-
-
-class EntryPointTests(unittest.TestCase):
+class EntryPointTests(TestCase):
     def setUp(self):
         self.monkeypatch = MonkeyPatch()
 
@@ -46,7 +41,7 @@ class EntryPointTests(unittest.TestCase):
         self.assertEqual(args.problem, 'WEICOM')
 
 
-class LoginTests(unittest.TestCase):
+class LoginTests(TestCase):
     def setUp(self):
         self.monkeypatch = MonkeyPatch()
 
