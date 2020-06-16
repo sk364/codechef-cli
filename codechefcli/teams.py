@@ -1,8 +1,8 @@
-from codechefcli.helpers import request
+from codechefcli.helpers import BASE_URL, request
 
 
 def get_team_url(name):
-    return f"/teams/view/{name}"
+    return f"{BASE_URL}/teams/view/{name}"
 
 
 def format_contest(item):

@@ -12,7 +12,7 @@ USER_DETAILS_CLASS = '.user-details'
 
 
 def get_user_teams_url(username):
-    return f'/users/{username}/teams/'
+    return f'{BASE_URL}/users/{username}/teams/'
 
 
 def format_list_item(item):
@@ -29,7 +29,8 @@ def get_user(username):
         team_url = get_team_url(username)
         if resp.url == team_url:
             return [{
-                'data': 'This is a team handle. Run `codechefcli --team {name}` to get team info\n',
+                'data': f'This is a team handle.'
+                        f'Run `codechefcli --team {username}` to get team info\n',
                 'code': 400
             }]
         elif resp.url.rstrip('/') == BASE_URL:
@@ -44,7 +45,6 @@ def get_user(username):
 
             # ignore first & last item i.e. username item & teams item respectively
             info = "\n".join([format_list_item(li) for li in info_list_items[1:-1]])
-            user_teams_url = get_user_teams_url(username)
 
             # rating
             star_rating = details_container.find(STAR_RATING_CLASS, first=True).text.strip()
@@ -53,18 +53,19 @@ def get_user(username):
             global_rank = rank_items[0].find('a', first=True).text.strip()
             country_rank = rank_items[1].find('a', first=True).text.strip()
 
-            user_details = ['']
-            user_details.append(style_text(f'User Details for {header} ({username}):', 'BOLD'))
-            user_details.append('')
-            user_details.append(info)
-            user_details.append(f"User's Teams: {user_teams_url}")
-            user_details.append('')
-            user_details.append(f'Rating: {star_rating} {rating}')
-            user_details.append(f'Global Rank: {global_rank}')
-            user_details.append(f'Country Rank: {country_rank}')
-            user_details.append('')
-            user_details.append(f'Find more at: {resp.url}')
-            user_details.append('')
-
-            return [{'data': "\n".join(user_details)}]
+            user_details = "\n".join([
+                '',
+                style_text(f'User Details for {header} ({username}):', 'BOLD'),
+                '',
+                info,
+                f"User's Teams: {get_user_teams_url(username)}",
+                '',
+                f'Rating: {star_rating} {rating}',
+                f'Global Rank: {global_rank}',
+                f'Country Rank: {country_rank}',
+                '',
+                f'Find more at: {resp.url}',
+                ''
+            ])
+            return [{'data': user_details}]
     return [{'code': 503}]
