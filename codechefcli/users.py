@@ -20,6 +20,9 @@ def format_list_item(item):
 
 
 def get_user(username):
+    if not username:
+        return []
+
     resp = request(url=f'/users/{username}')
 
     if resp.status_code == 200:
