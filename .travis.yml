@@ -6,6 +6,6 @@ python:
 - '3.8'
 install: pip install -r requirements.txt
 script:
-- flake8 . --max-line-length=100 --exclude=tests.py
+- flake8 . --max-line-length=100
 - isort
 - pytest -v
