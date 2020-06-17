@@ -31,7 +31,7 @@ class TeamsTestCase(TestCase):
         self.assertEqual(resps[0]["data"], "Team not found.")
 
     def test_get_team(self):
-        """Should return 404 response code on 404 status code"""
+        """Should return team info"""
         def mock_req_team(*args, **kwargs):
             return MockHTMLResponse(data="<table></table><table><h1>ABCD</h1></table><table> \
                 <tr><td>A:</td><td>C</td></tr> \
