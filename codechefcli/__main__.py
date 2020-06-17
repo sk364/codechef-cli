@@ -75,7 +75,7 @@ def create_parser():
 
     # tags
     parser.add_argument('--tags', required=False, nargs='*', metavar="<Tag Name>",
-                        help='No args: get all tags. Add args to get problems in the tag')
+                        help='No args: get all tags. Add args to get tagged problems')
 
     # common
     parser.add_argument('--lines', required=False, metavar='<Lines>', default=DEFAULT_NUM_LINES,

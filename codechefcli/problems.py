@@ -34,15 +34,15 @@ def get_description(problem_code, contest_code):
     if resp_json["status"] == "success":
         problem = [
             '',
-            style_text('Name: ', "BOLD") + resp_json['problem_name'],
+            style_text('Name: ', "BOLD") + resp_json.get('problem_name', ''),
             style_text("Description:", "BOLD"),
-            re.sub(r'(<|<\/)\w+>', '', resp_json["body"]),
+            re.sub(r'(<|<\/)\w+>', '', resp_json.get("body", '')),
             '',
-            style_text("Author: ", "BOLD") + resp_json['problem_author'],
-            style_text("Date Added: ", "BOLD") + resp_json['date_added'],
-            style_text("Max Time Limit: ", "BOLD") + f"{resp_json['max_timelimit']} secs",
-            style_text("Source Limit: ", "BOLD") + f"{resp_json['source_sizelimit']} Bytes",
-            style_text("Languages: ", "BOLD") + resp_json['languages_supported'],
+            style_text("Author: ", "BOLD") + resp_json.get('problem_author', ''),
+            style_text("Date Added: ", "BOLD") + resp_json.get('date_added', ''),
+            style_text("Max Time Limit: ", "BOLD") + f"{resp_json.get('max_timelimit', '')} secs",
+            style_text("Source Limit: ", "BOLD") + f"{resp_json.get('source_sizelimit', '')} Bytes",
+            style_text("Languages: ", "BOLD") + resp_json.get('languages_supported', ''),
             ''
         ]
         if resp_json.get('tags'):
@@ -73,10 +73,9 @@ def get_form_token(rhtml):
 
 def get_status_table(status_code):
     resp = request(url=f'/error_status_table/{status_code}')
-    if resp.status_code == 200:
-        if not resp.text:
-            return
-        return resp.html
+    if resp.status_code != 200 or not resp.text:
+        return
+    return resp.html
 
 
 def get_compilation_error(status_code):
@@ -144,20 +143,16 @@ def submit_problem(problem_code, solution_file, language):
             result_code = status_json['result_code']
 
             if result_code != 'wait':
+                data = ''
                 if result_code == 'compile':
                     error_msg = get_compilation_error(status_code)
-                    compile_error_msg = u'Compilation error.\n{0}'.format(error_msg)
-                    data = style_text(compile_error_msg, 'FAIL')
+                    data = style_text(f'Compilation error.\n{error_msg}', 'FAIL')
                 elif result_code == 'runtime':
-                    error_msg = status_json['signal']
-                    runtime_error_msg = u'Runtime error. {0}\n'.format(error_msg)
-                    data = style_text(runtime_error_msg, 'FAIL')
+                    data = style_text(f'Runtime error. {status_json.get('signal', '')}\n', 'FAIL')
                 elif result_code == 'wrong':
                     data = style_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':
                     data = 'Correct answer\n'
-                else:
-                    data = ''
 
                 resps = [{'data': data}]
                 status_table = get_status_table(status_code)
@@ -216,7 +211,7 @@ def search_problems(sort, order, search_type):
 def get_tags(sort, order, tags):
     if len(tags) == 0:
         return get_all_tags()
-    return get_problem_tags(sort, order, tags)
+    return get_tagged_problems(sort, order, tags)
 
 
 def get_all_tags():
@@ -246,7 +241,7 @@ def get_all_tags():
 
 
 @sort_it
-def get_problem_tags(sort, order, tags):
+def get_tagged_problems(sort, order, tags):
     resp = request(url=f'/get/tags/problems/{",".join(tags)}')
 
     try:

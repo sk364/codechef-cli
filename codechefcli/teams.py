@@ -1,4 +1,4 @@
-from codechefcli.helpers import BASE_URL, request, html_to_list
+from codechefcli.helpers import BASE_URL, html_to_list, request
 
 
 def get_team_url(name):
