@@ -3,33 +3,34 @@
 A command-line tool for querying and submitting problems on [CodeChef](https://www.codechef.com/).
 
 # Features
+* Search & submit problems
+* Search solutions
+* Search users, ratings, tags and teams
 
-* Get problem description
-* Get user information
-* Submit problems
-* Search problems in contest, by category, or by tags
-* Get ratings
-* Get problem solutions
-* Get contests
-
+# Requirements
+* python (>= 3.6)
+* [requests_html](https://github.com/psf/requests-html/) (0.10.0)
 
 # Installation
-
-Available on pip. Install using the command:
-
-> pip install codechefcli
-
+```
+pip install codechefcli
+```
 
 # Usage
 
-See full list of options:  
-> codechefcli --help
+```
+# See full list of options:
+codechefcli --help
 
-Get problem description:  
-> codechefcli --problem WEICOM
+# Login to CodeChef
+codechefcli --login
 
-Get contests:  
-> codechefcli --contests
+# Get problem description:
+codechefcli --problem WEICOM
 
-Submit a problem:  
-> codechefcli --submit WEICOM /path/to/solution/file C++
+# Get contests:
+codechefcli --contests
+
+# Submit a problem:
+codechefcli --submit WEICOM /path/to/solution/file C++
+```
