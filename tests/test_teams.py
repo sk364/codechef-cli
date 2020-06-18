@@ -37,6 +37,8 @@ class TeamsTestCase(TestCase):
                 <tr><td>A:</td><td>C</td></tr> \
                 <tr><td>B:</td><td>D</td></tr> \
                 <tr><td>E:</td><td>F</td></tr> \
+                <tr><td>Information for G:</td><td>G</td></tr> \
+                <tr><td>xx</td></tr> \
             </table><table> \
                 <tr><td>T</td><td>U</td></tr> \
                 <tr><td>t1</td><td>u1</td></tr> \
@@ -45,5 +47,7 @@ class TeamsTestCase(TestCase):
         self.monkeypatch.setattr(teams, "request", mock_req_team)
         resps = teams.get_team("abcd")
         self.assertEqual(
-            resps[0]["data"], '\nABCD\n\nA: C\nB: D\n\n\nProblems Successfully Solved:\n')
+            resps[0]["data"],
+            '\nABCD\n\nA: C\nB: D\nE: F\n\nInformation for G: G\n\nProblems Successfully Solved:\n'
+        )
         self.assertListEqual(resps[1]["data"], [['T', 'U'], ['t1', 'u1'], ['t2', 'u2']])
