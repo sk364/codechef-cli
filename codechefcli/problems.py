@@ -20,6 +20,8 @@ COMPILATION_ERROR_CLASS = '.cc-error-txt'
 PROBLEM_LIST_TABLE_HEADINGS = ['CODE', 'NAME', 'SUBMISSION', 'ACCURACY']
 RESULT_CODES = {'AC': 15, 'WA': 14, 'TLE': 13, 'RTE': 12, 'CTE': 11}
 RATINGS_TABLE_HEADINGS = ['GLOBAL(COUNTRY)', 'USER NAME', 'RATING', 'GAIN/LOSS']
+SOLUTION_ERR_MSG_CLASS = '.err-message'
+INVALID_SOLUTION_ID_MSG = "Invalid solution ID"
 
 
 def get_description(problem_code, contest_code):
@@ -148,7 +150,7 @@ def submit_problem(problem_code, solution_file, language):
                     error_msg = get_compilation_error(status_code)
                     data = style_text(f'Compilation error.\n{error_msg}', 'FAIL')
                 elif result_code == 'runtime':
-                    data = style_text(f'Runtime error. {status_json.get('signal', '')}\n', 'FAIL')
+                    data = style_text(f"Runtime error. {status_json.get('signal', '')}\n", 'FAIL')
                 elif result_code == 'wrong':
                     data = style_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':
@@ -234,6 +236,8 @@ def get_all_tags():
             else:
                 data_rows.append(row)
                 row = [tag_name]
+        if len(row):
+            data_rows.append(row)
 
         return [{'data': data_rows, 'data_type': 'table'}]
 
@@ -251,7 +255,7 @@ def get_tagged_problems(sort, order, tags):
 
     if resp.status_code == 200:
         data_rows = [PROBLEM_LIST_TABLE_HEADINGS]
-        all_tags = all_tags['all_problems']
+        all_tags = all_tags.get('all_problems')
 
         if not all_tags:
             return [{'code': 404, 'extra': "Sorry, there are no problems with the following tags!"}]
@@ -300,7 +304,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
         except ValueError:
             return [{'code': 503}]
 
-        ratings = ratings.get('list')
+        ratings = ratings.get('list') or []
         if len(ratings) == 0:
             return [{'code': 404, 'data': 'No ratings found'}]
 
@@ -312,7 +316,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
                 str(user['rating']),
                 str(user['diff'])
             ])
-        return [{'code': 200, 'data': data_rows, 'data_type': 'table'}]
+        return [{'data': data_rows, 'data_type': 'table'}]
     return [{'code': 503}]
 
 
@@ -338,12 +342,12 @@ def get_contests(show_past):
 def build_request_params(resp_html, language, result, username, page):
     params = {'page': page - 1} if page != 1 else {}
     if language:
-        lang_dropdown = resp_html.find(LANGUAGE_SELECTOR)
+        lang_dropdown = resp_html.find(LANGUAGE_SELECTOR, first=True)
         options = lang_dropdown.find('option')
 
         for option in options:
             if language.upper() == option.text.strip().upper():
-                params['language'] = option['value']
+                params['language'] = dict(option.element.items()).get('value', '')
                 break
     if result:
         params['status'] = RESULT_CODES[result.upper()]
@@ -356,6 +360,9 @@ def build_request_params(resp_html, language, result, username, page):
 def get_solutions(sort, order, problem_code, page, language, result, username):
     url = f'/status/{problem_code.upper()}'
     resp = request(url=url)
+
+    if resp.status_code != 200:
+        return [{'code': 503}]
 
     params = build_request_params(resp.html, language, result, username, page)
     resp = request(url=url, params=params)
@@ -387,8 +394,8 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
 def get_solution(solution_code):
     resp = request(url=f'/viewplaintext/{solution_code}')
     if resp.status_code == 200:
-        if resp.html.find('.err-message') == "Invalid solution ID":
+        err_msg_element = resp.html.find(SOLUTION_ERR_MSG_CLASS, first=True)
+        if err_msg_element and err_msg_element.text == INVALID_SOLUTION_ID_MSG:
             return [{'code': 404, "data": "Invalid Solution ID"}]
-        else:
-            return [{'data': f'\n{resp.html.find("pre", first=True).element.text}\n'}]
+        return [{'data': f'\n{resp.html.find("pre", first=True).element.text}\n'}]
     return [{'code': 503}]
