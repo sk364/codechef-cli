@@ -17,12 +17,9 @@ def login_required(func):
                 is_logged_in = True
             else:
                 os.remove(COOKIES_FILE_PATH)
-
         if is_logged_in is False:
             return [{'code': 401}]
-        else:
-            return func(*args, **kwargs)
-
+        return func(*args, **kwargs)
     return wrapper
 
 

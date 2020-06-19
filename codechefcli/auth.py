@@ -4,9 +4,8 @@ from getpass import getpass
 from requests_html import HTMLSession
 
 from codechefcli.decorators import login_required
-from codechefcli.helpers import (COOKIES_FILE_PATH, CSRF_TOKEN_INPUT_ID,
-                                 get_csrf_token, init_session_cookie, request,
-                                 set_session_cookies)
+from codechefcli.helpers import (COOKIES_FILE_PATH, CSRF_TOKEN_INPUT_ID, get_csrf_token,
+                                 init_session_cookie, request, set_session_cookies)
 
 CSRF_TOKEN_MISSING = 'No CSRF Token found'
 SESSION_LIMIT_FORM_ID = '#session-limit-page'

@@ -5,9 +5,8 @@ from requests_html import HTML
 
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
-from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID,
-                                 SERVER_DOWN_MSG, get_csrf_token, html_to_list,
-                                 request, style_text)
+from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID, SERVER_DOWN_MSG, get_csrf_token,
+                                 html_to_list, request, style_text)
 
 LANGUAGE_SELECTOR = "#language"
 INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
@@ -117,7 +116,7 @@ def submit_problem(problem_code, solution_file, language):
     try:
         solution_file_obj = open(solution_file)
     except IOError:
-        return [{'data_type': 'text', 'data': 'Solution file not found.', 'code': 400}]
+        return [{'data': 'Solution file not found.', 'code': 400}]
 
     data = {
         'language': language_code,
@@ -134,12 +133,18 @@ def submit_problem(problem_code, solution_file, language):
         status_code = post_resp.url.split('/')[-1]
         url = f'/get_submission_status/{status_code}'
         print(style_text('Fetching results...\n', 'BLUE'))
+
+        max_tries = 3
+        num_tries = 0
         while True:
             resp = request(url=url, token=csrf_token)
+            num_tries += 1
 
             try:
                 status_json = resp.json()
             except ValueError:
+                if num_tries == max_tries:
+                    return [{'code': 503}]
                 continue
 
             result_code = status_json['result_code']

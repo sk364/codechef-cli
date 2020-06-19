@@ -3,9 +3,8 @@ import sys
 
 from codechefcli.auth import login, logout
 from codechefcli.helpers import print_response
-from codechefcli.problems import (RESULT_CODES, get_contest_problems,
-                                  get_contests, get_description, get_ratings,
-                                  get_solution, get_solutions, get_tags,
+from codechefcli.problems import (RESULT_CODES, get_contest_problems, get_contests, get_description,
+                                  get_ratings, get_solution, get_solutions, get_tags,
                                   search_problems, submit_problem)
 from codechefcli.teams import get_team
 from codechefcli.users import get_user

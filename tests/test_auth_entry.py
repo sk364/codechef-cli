@@ -5,11 +5,9 @@ from requests_html import HTML
 
 from codechefcli import __main__ as entry_point
 from codechefcli import auth
-from codechefcli.auth import (CSRF_TOKEN_MISSING, EMPTY_AUTH_DATA_MSG,
-                              INCORRECT_CREDS_MSG, LOGIN_SUCCESS_MSG,
-                              LOGOUT_BUTTON_CLASS, SESSION_LIMIT_FORM_ID,
-                              SESSION_LIMIT_MSG, disconnect_active_sessions,
-                              login)
+from codechefcli.auth import (CSRF_TOKEN_MISSING, EMPTY_AUTH_DATA_MSG, INCORRECT_CREDS_MSG,
+                              LOGIN_SUCCESS_MSG, LOGOUT_BUTTON_CLASS, SESSION_LIMIT_FORM_ID,
+                              SESSION_LIMIT_MSG, disconnect_active_sessions, login)
 from codechefcli.helpers import CSRF_TOKEN_INPUT_ID
 from tests.utils import MockHTMLResponse
 

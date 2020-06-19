@@ -3,9 +3,8 @@ from unittest import TestCase
 from _pytest.monkeypatch import MonkeyPatch
 
 from codechefcli import users
-from codechefcli.users import (HEADER, RATING_NUMBER_CLASS, RATING_RANKS_CLASS,
-                               STAR_RATING_CLASS, USER_DETAILS_CLASS,
-                               USER_DETAILS_CONTAINER_CLASS, get_user)
+from codechefcli.users import (HEADER, RATING_NUMBER_CLASS, RATING_RANKS_CLASS, STAR_RATING_CLASS,
+                               USER_DETAILS_CLASS, USER_DETAILS_CONTAINER_CLASS, get_user)
 from tests.utils import MockHTMLResponse
 
 
