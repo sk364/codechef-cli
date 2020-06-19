@@ -3,18 +3,20 @@ from unittest import TestCase
 from _pytest.monkeypatch import MonkeyPatch
 
 from codechefcli import problems
-from codechefcli.problems import (INVALID_SOLUTION_ID_MSG, LANGUAGE_SELECTOR,
-                                  PAGE_INFO_CLASS, SOLUTION_ERR_MSG_CLASS,
-                                  build_request_params, get_contest_problems,
-                                  get_contests, get_description, get_ratings,
-                                  get_solution, get_solutions, get_tags,
-                                  search_problems, submit_problem)
-from tests.utils import HTML, MockHTMLResponse
+from codechefcli.auth import LOGIN_FORM_ID
+from codechefcli.problems import (COMPILATION_ERROR_CLASS, INVALID_SOLUTION_ID_MSG,
+                                  LANGUAGE_DROPDOWN_ID, LANGUAGE_SELECTOR, PAGE_INFO_CLASS,
+                                  PROBLEM_SUBMISSION_FORM_ID, SOLUTION_ERR_MSG_CLASS,
+                                  build_request_params, get_contest_problems, get_contests,
+                                  get_description, get_ratings, get_solution, get_solutions,
+                                  get_tags, search_problems, submit_problem)
+from tests.utils import HTML, MockHTMLResponse, fake_login
 
 
 class ProblemsTestCase(TestCase):
     def setUp(self):
         self.monkeypatch = MonkeyPatch()
+        fake_login()
 
     def test_get_problem_desc_invalid_json(self):
         """Should return 503 when response is not JSON-parsable"""
@@ -46,34 +48,165 @@ class ProblemsTestCase(TestCase):
         )
 
     def test_submit_problem_no_login(self):
-        pass
+        """Should return 401 response when user is not logged in"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f"<div id='{LOGIN_FORM_ID[1:]}'>Login</div>")
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.assertEqual(submit_problem("A", "a/b", "p")[0]['code'], 401)
 
     def test_submit_problem_invalid_lang(self):
-        pass
+        """Should return 400 when invalid language is passed"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ")
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.assertEqual(submit_problem("A", "a/b", "p")[0]['code'], 400)
 
     def test_submit_problem_sol_file_not_found(self):
-        pass
+        """Should return 400 response when solution file is not found"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ")
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.assertEqual(submit_problem("A", "invalid_path/invalid_path", "a")[0]['code'], 400)
 
     def test_submit_problem_status_not_200(self):
-        pass
+        """Should return 503 response when status code is not 200"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(status_code=400)
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.assertEqual(submit_problem("A", "a/b", "p")[0]['code'], 503)
+
+    def test_submit_problem_submission_status_not_200(self):
+        """Should return 503 response when submission req status code is not 200"""
+        def mock_req(*args, **kwargs):
+            if kwargs.get('method') != 'POST':
+                return MockHTMLResponse(data=f" \
+                    <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                        <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                            <option value='a'>a(A)</option> \
+                        </select> \
+                    </form> \
+                ")
+            return MockHTMLResponse(status_code=500)
+        self.monkeypatch.setattr(problems, "request", mock_req)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['code'], 503)
 
     def test_submit_problem_invalid_status_json(self):
-        pass
+        """Should return 503 response when submission status request returns invalid json"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ", json="{")
+        self.monkeypatch.setattr(problems, "request", mock_req)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['code'], 503)
 
     def test_submit_problem_compile_err(self):
-        pass
+        """Should return compilation error message when result code of submission is compile"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(
+                data=f" \
+                    <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                        <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                            <option value='a'>a(A)</option> \
+                        </select> \
+                    </form> \
+                <div class='{COMPILATION_ERROR_CLASS[1:]}'>Comp Err</div>",
+                json='{"result_code": "compile"}'
+            )
+
+        def mock_get_status_table(*args, **kwargs):
+            return
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(
+            submit_problem("A", "/tmp/a", "a")[0]['data'],
+            '\x1b[91mCompilation error.\nComp Err\x1b[0m')
 
     def test_submit_problem_runtime_err(self):
-        pass
+        """Should return runtime error message when result code of submission is runtime"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ", json='{"result_code": "runtime", "signal": "abcd"}')
+
+        def mock_get_status_table(*args, **kwargs):
+            return
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(
+            submit_problem("A", "/tmp/a", "a")[0]['data'], '\x1b[91mRuntime error. abcd\n\x1b[0m')
 
     def test_submit_problem_wrong_ans(self):
-        pass
+        """Should return wrong answer message when result code of submission is wrong"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ", json='{"result_code": "wrong"}')
+
+        def mock_get_status_table(*args, **kwargs):
+            return
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(
+            submit_problem("A", "/tmp/a", "a")[0]['data'], '\x1b[91mWrong answer\n\x1b[0m')
 
     def test_submit_problem_accepted_ans(self):
-        pass
+        """Should return accepted message when result code of submission is accepted"""
+        def mock_req(*args, **kwargs):
+            return MockHTMLResponse(data=f" \
+                <form id='{PROBLEM_SUBMISSION_FORM_ID[1:]}'> \
+                    <select id='{LANGUAGE_DROPDOWN_ID[1:]}'> \
+                        <option value='a'>a(A)</option> \
+                    </select> \
+                </form> \
+            ", json='{"result_code": "accepted"}')
 
-    def test_submit_problem_with_status_table(self):
-        pass
+        def mock_get_status_table(*args, **kwargs):
+            return
+        self.monkeypatch.setattr(problems, "request", mock_req)
+        self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
+
+        with open('/tmp/a', 'w') as f:
+            f.write('a')
+        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['data'], 'Correct answer\n')
 
 
 class SearchTestCase(TestCase):
@@ -391,6 +524,6 @@ class SolutionsTestCase(TestCase):
     def test_get_solution(self):
         """Should return solution text"""
         def mock_req(*args, **kwargs):
-            return MockHTMLResponse(data=f'<pre>print("hello cc")</pre>')
+            return MockHTMLResponse(data='<pre>print("hello cc")</pre>')
         self.monkeypatch.setattr(problems, "request", mock_req)
         self.assertEqual(get_solution("a")[0]['data'], '\nprint("hello cc")\n')
