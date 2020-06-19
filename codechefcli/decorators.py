@@ -17,12 +17,9 @@ def login_required(func):
                 is_logged_in = True
             else:
                 os.remove(COOKIES_FILE_PATH)
-
         if is_logged_in is False:
             return [{'code': 401}]
-        else:
-            return func(*args, **kwargs)
-
+        return func(*args, **kwargs)
     return wrapper
 
 
@@ -38,6 +35,8 @@ def sort_it(func):
                     all_rows = resp['data']
                     heading = all_rows[0]
                     data_rows = all_rows[1:]
+                    if not data_rows:
+                        continue
                     if sort in heading:
                         index = heading.index(sort)
 
@@ -47,7 +46,7 @@ def sort_it(func):
                             if order_type == 'desc':
                                 reverse = True
 
-                            if data_rows[1][index].isdigit():
+                            if data_rows[0][index].isdigit():
                                 for data_row in data_rows:
                                     if data_row[index].isdigit():
                                         data_row[index] = int(data_row[index])

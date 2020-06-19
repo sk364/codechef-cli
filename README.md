@@ -34,3 +34,14 @@ codechefcli --contests
 # Submit a problem:
 codechefcli --submit WEICOM /path/to/solution/file C++
 ```
+
+# Linting & Testing
+
+```
+# run tests
+pytest -v
+
+# lint
+isort
+flake8 . --max-line-length=100
+```

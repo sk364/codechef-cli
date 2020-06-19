@@ -3,9 +3,8 @@ import sys
 
 from codechefcli.auth import login, logout
 from codechefcli.helpers import print_response
-from codechefcli.problems import (RESULT_CODES, get_contest_problems,
-                                  get_contests, get_description, get_ratings,
-                                  get_solution, get_solutions, get_tags,
+from codechefcli.problems import (RESULT_CODES, get_contest_problems, get_contests, get_description,
+                                  get_ratings, get_solution, get_solutions, get_tags,
                                   search_problems, submit_problem)
 from codechefcli.teams import get_team
 from codechefcli.users import get_user
@@ -75,7 +74,7 @@ def create_parser():
 
     # tags
     parser.add_argument('--tags', required=False, nargs='*', metavar="<Tag Name>",
-                        help='No args: get all tags. Add args to get problems in the tag')
+                        help='No args: get all tags. Add args to get tagged problems')
 
     # common
     parser.add_argument('--lines', required=False, metavar='<Lines>', default=DEFAULT_NUM_LINES,
@@ -175,15 +174,17 @@ def main(argv=None):
         else:
             parser.print_help()
 
-        if resps:
-            for resp in resps:
-                print_response(**resp)
-        else:
-            print_response(**GENERIC_RESP)
+        if not resps:
+            resps = [GENERIC_RESP]
+
+        for resp in resps:
+            print_response(**resp)
+        return resps
     except KeyboardInterrupt:
         print('\nBye.')
-    return 0
+        return [{"data": "\nBye."}]
+    return [{"data": "0"}]
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    main(sys.argv)

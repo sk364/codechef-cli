@@ -8,6 +8,7 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
 
+CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 MIN_NUM_SPACES = 3
 BASE_URL = 'https://www.codechef.com'
 SERVER_DOWN_MSG = 'Please try again later. Seems like CodeChef server is down!'
@@ -26,17 +27,17 @@ BCOLORS = {
 }
 
 
+def set_session_cookies(session):
+    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
+
+
 def get_session():
     session = HTMLSession()
 
     if os.path.exists(COOKIES_FILE_PATH):
-        session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
+        set_session_cookies(session)
         session.cookies.load(ignore_discard=True, ignore_expires=True)
     return session
-
-
-def set_session_cookies(session):
-    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
 
 
 def init_session_cookie(name, value, **kwargs):
@@ -63,8 +64,11 @@ def request(session=None, method="GET", url="", token=None, **kwargs):
         session.headers = getattr(session, 'headers') or {}
         session.headers.update({'X-CSRF-Token': token})
 
+    if BASE_URL not in url:
+        url = f'{BASE_URL}{url}'
+
     try:
-        return session.request(method=method, url=f'{BASE_URL}{url}', timeout=(15, 15), **kwargs)
+        return session.request(method=method, url=url, timeout=(15, 15), **kwargs)
     except (ConnectionError, ReadTimeout):
         print(INTERNET_DOWN_MSG)
         sys.exit(1)
@@ -75,7 +79,7 @@ def html_to_list(table):
         return []
 
     rows = table.find('tr')
-    data_rows = [[header.text.strip().upper() for header in rows[0].find('th')]]
+    data_rows = [[header.text.strip().upper() for header in rows[0].find('th, td')]]
     for row in rows[1:]:
         data_rows.append([col.text.strip() for col in row.find('td')])
     return data_rows
@@ -90,7 +94,7 @@ def get_col_max_lengths(data_rows, num_cols):
     return max_len_in_cols
 
 
-def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
+def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES, is_pager=True):
     if len(data_rows) == 0:
         return
 
@@ -105,34 +109,43 @@ def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES):
         table.append("".join(_row))
 
     table_str = '\n\n'.join(table)
-    pager(table_str)
+    if is_pager:
+        pager(table_str)
     print(table_str)
+    return table_str
 
 
 def style_text(text, color=None):
-    if color is None:
+    if color is None or BCOLORS.get(color) is None:
         return text
 
     return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
 
 
-def print_response_util(data, extra, data_type, color, is_pager=False):
+def print_response_util(data, extra, data_type, color, is_pager=True):
     if data is None and extra is None:
-        print(style_text('Nothing to show.', 'WARNING'))
+        no_data_msg = style_text('Nothing to show.', 'WARNING')
+        print(no_data_msg)
+        return no_data_msg, None
 
+    return_val = None
     if data is not None:
         if data_type == 'table':
-            print_table(data)
+            return_val = print_table(data, is_pager=is_pager)
         elif data_type == 'text':
             if is_pager:
                 pager(style_text(data, color))
-            print(style_text(data, color))
+            return_val = style_text(data, color)
+            print(return_val)
 
+    styled_extra = None
     if extra is not None:
-        print(style_text(extra, color))
+        styled_extra = style_text(extra, color)
+        print(styled_extra)
+    return return_val, styled_extra
 
 
-def print_response(data_type='text', code=200, data=None, extra=None, pager=False):
+def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
     color = None
 
     if code == 503:
@@ -142,11 +155,17 @@ def print_response(data_type='text', code=200, data=None, extra=None, pager=Fals
     elif code == 404 or code == 400:
         color = 'WARNING'
     elif code == 401:
-        color = 'FAIL'
         if not data:
             data = UNAUTHORIZED_MSG
+        color = 'FAIL'
 
-    print_response_util(data, extra, data_type, color, is_pager=pager)
+    is_pager = False
+    if not hasattr(kwargs, 'is_pager') and data_type == 'table':
+        is_pager = True
+    else:
+        is_pager = kwargs.get('is_pager', False)
+
+    return print_response_util(data, extra, data_type, color, is_pager=is_pager)
 
 
 def get_csrf_token(rhtml, selector):

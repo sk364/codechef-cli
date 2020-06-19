@@ -5,10 +5,9 @@ from requests_html import HTML
 
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
-from codechefcli.helpers import (BASE_URL, SERVER_DOWN_MSG, get_csrf_token,
+from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID, SERVER_DOWN_MSG, get_csrf_token,
                                  html_to_list, request, style_text)
 
-CSRF_TOKEN_SUBMIT_FORM = "edit-csrfToken"
 LANGUAGE_SELECTOR = "#language"
 INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
 PAGE_INFO_CLASS = '.pageinfo'
@@ -20,6 +19,8 @@ COMPILATION_ERROR_CLASS = '.cc-error-txt'
 PROBLEM_LIST_TABLE_HEADINGS = ['CODE', 'NAME', 'SUBMISSION', 'ACCURACY']
 RESULT_CODES = {'AC': 15, 'WA': 14, 'TLE': 13, 'RTE': 12, 'CTE': 11}
 RATINGS_TABLE_HEADINGS = ['GLOBAL(COUNTRY)', 'USER NAME', 'RATING', 'GAIN/LOSS']
+SOLUTION_ERR_MSG_CLASS = '.err-message'
+INVALID_SOLUTION_ID_MSG = "Invalid solution ID"
 
 
 def get_description(problem_code, contest_code):
@@ -34,15 +35,15 @@ def get_description(problem_code, contest_code):
     if resp_json["status"] == "success":
         problem = [
             '',
-            style_text('Name: ', "BOLD") + resp_json['problem_name'],
+            style_text('Name: ', "BOLD") + resp_json.get('problem_name', ''),
             style_text("Description:", "BOLD"),
-            re.sub(r'(<|<\/)\w+>', '', resp_json["body"]),
+            re.sub(r'(<|<\/)\w+>', '', resp_json.get("body", '')),
             '',
-            style_text("Author: ", "BOLD") + resp_json['problem_author'],
-            style_text("Date Added: ", "BOLD") + resp_json['date_added'],
-            style_text("Max Time Limit: ", "BOLD") + f"{resp_json['max_timelimit']} secs",
-            style_text("Source Limit: ", "BOLD") + f"{resp_json['source_sizelimit']} Bytes",
-            style_text("Languages: ", "BOLD") + resp_json['languages_supported'],
+            style_text("Author: ", "BOLD") + resp_json.get('problem_author', ''),
+            style_text("Date Added: ", "BOLD") + resp_json.get('date_added', ''),
+            style_text("Max Time Limit: ", "BOLD") + f"{resp_json.get('max_timelimit', '')} secs",
+            style_text("Source Limit: ", "BOLD") + f"{resp_json.get('source_sizelimit', '')} Bytes",
+            style_text("Languages: ", "BOLD") + resp_json.get('languages_supported', ''),
             ''
         ]
         if resp_json.get('tags'):
@@ -73,10 +74,9 @@ def get_form_token(rhtml):
 
 def get_status_table(status_code):
     resp = request(url=f'/error_status_table/{status_code}')
-    if resp.status_code == 200:
-        if not resp.text:
-            return
-        return resp.html
+    if resp.status_code != 200 or not resp.text:
+        return
+    return resp.html
 
 
 def get_compilation_error(status_code):
@@ -106,7 +106,7 @@ def submit_problem(problem_code, solution_file, language):
         rhtml = get_resp.html
         form_token = get_form_token(rhtml)
         language_code = get_language_code(rhtml, language)
-        csrf_token = get_csrf_token(rhtml, CSRF_TOKEN_SUBMIT_FORM)
+        csrf_token = get_csrf_token(rhtml, CSRF_TOKEN_INPUT_ID)
 
         if language_code is None:
             return [{'code': 400, 'data': 'Invalid language.'}]
@@ -116,7 +116,7 @@ def submit_problem(problem_code, solution_file, language):
     try:
         solution_file_obj = open(solution_file)
     except IOError:
-        return [{'data_type': 'text', 'data': 'Solution file not found.', 'code': 400}]
+        return [{'data': 'Solution file not found.', 'code': 400}]
 
     data = {
         'language': language_code,
@@ -133,31 +133,33 @@ def submit_problem(problem_code, solution_file, language):
         status_code = post_resp.url.split('/')[-1]
         url = f'/get_submission_status/{status_code}'
         print(style_text('Fetching results...\n', 'BLUE'))
+
+        max_tries = 3
+        num_tries = 0
         while True:
             resp = request(url=url, token=csrf_token)
+            num_tries += 1
 
             try:
                 status_json = resp.json()
             except ValueError:
+                if num_tries == max_tries:
+                    return [{'code': 503}]
                 continue
 
             result_code = status_json['result_code']
 
             if result_code != 'wait':
+                data = ''
                 if result_code == 'compile':
                     error_msg = get_compilation_error(status_code)
-                    compile_error_msg = u'Compilation error.\n{0}'.format(error_msg)
-                    data = style_text(compile_error_msg, 'FAIL')
+                    data = style_text(f'Compilation error.\n{error_msg}', 'FAIL')
                 elif result_code == 'runtime':
-                    error_msg = status_json['signal']
-                    runtime_error_msg = u'Runtime error. {0}\n'.format(error_msg)
-                    data = style_text(runtime_error_msg, 'FAIL')
+                    data = style_text(f"Runtime error. {status_json.get('signal', '')}\n", 'FAIL')
                 elif result_code == 'wrong':
                     data = style_text('Wrong answer\n', 'FAIL')
                 elif result_code == 'accepted':
                     data = 'Correct answer\n'
-                else:
-                    data = ''
 
                 resps = [{'data': data}]
                 status_table = get_status_table(status_code)
@@ -216,7 +218,7 @@ def search_problems(sort, order, search_type):
 def get_tags(sort, order, tags):
     if len(tags) == 0:
         return get_all_tags()
-    return get_problem_tags(sort, order, tags)
+    return get_tagged_problems(sort, order, tags)
 
 
 def get_all_tags():
@@ -239,6 +241,8 @@ def get_all_tags():
             else:
                 data_rows.append(row)
                 row = [tag_name]
+        if len(row):
+            data_rows.append(row)
 
         return [{'data': data_rows, 'data_type': 'table'}]
 
@@ -246,7 +250,7 @@ def get_all_tags():
 
 
 @sort_it
-def get_problem_tags(sort, order, tags):
+def get_tagged_problems(sort, order, tags):
     resp = request(url=f'/get/tags/problems/{",".join(tags)}')
 
     try:
@@ -256,7 +260,7 @@ def get_problem_tags(sort, order, tags):
 
     if resp.status_code == 200:
         data_rows = [PROBLEM_LIST_TABLE_HEADINGS]
-        all_tags = all_tags['all_problems']
+        all_tags = all_tags.get('all_problems')
 
         if not all_tags:
             return [{'code': 404, 'extra': "Sorry, there are no problems with the following tags!"}]
@@ -283,7 +287,7 @@ def get_problem_tags(sort, order, tags):
 def get_ratings(sort, order, country, institution, institution_type, page, lines):
     csrf_resp = request(url='/ratings/all')
     if csrf_resp.status_code == 200:
-        csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_SUBMIT_FORM)
+        csrf_token = get_csrf_token(csrf_resp.html, CSRF_TOKEN_INPUT_ID)
     else:
         return [{'code': 503}]
 
@@ -305,7 +309,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
         except ValueError:
             return [{'code': 503}]
 
-        ratings = ratings.get('list')
+        ratings = ratings.get('list') or []
         if len(ratings) == 0:
             return [{'code': 404, 'data': 'No ratings found'}]
 
@@ -317,7 +321,7 @@ def get_ratings(sort, order, country, institution, institution_type, page, lines
                 str(user['rating']),
                 str(user['diff'])
             ])
-        return [{'code': 200, 'data': data_rows, 'data_type': 'table'}]
+        return [{'data': data_rows, 'data_type': 'table'}]
     return [{'code': 503}]
 
 
@@ -343,12 +347,12 @@ def get_contests(show_past):
 def build_request_params(resp_html, language, result, username, page):
     params = {'page': page - 1} if page != 1 else {}
     if language:
-        lang_dropdown = resp_html.find(LANGUAGE_SELECTOR)
+        lang_dropdown = resp_html.find(LANGUAGE_SELECTOR, first=True)
         options = lang_dropdown.find('option')
 
         for option in options:
             if language.upper() == option.text.strip().upper():
-                params['language'] = option['value']
+                params['language'] = dict(option.element.items()).get('value', '')
                 break
     if result:
         params['status'] = RESULT_CODES[result.upper()]
@@ -361,6 +365,9 @@ def build_request_params(resp_html, language, result, username, page):
 def get_solutions(sort, order, problem_code, page, language, result, username):
     url = f'/status/{problem_code.upper()}'
     resp = request(url=url)
+
+    if resp.status_code != 200:
+        return [{'code': 503}]
 
     params = build_request_params(resp.html, language, result, username, page)
     resp = request(url=url, params=params)
@@ -392,8 +399,8 @@ def get_solutions(sort, order, problem_code, page, language, result, username):
 def get_solution(solution_code):
     resp = request(url=f'/viewplaintext/{solution_code}')
     if resp.status_code == 200:
-        if resp.html.find('.err-message') == "Invalid solution ID":
+        err_msg_element = resp.html.find(SOLUTION_ERR_MSG_CLASS, first=True)
+        if err_msg_element and err_msg_element.text == INVALID_SOLUTION_ID_MSG:
             return [{'code': 404, "data": "Invalid Solution ID"}]
-        else:
-            return [{'data': f'\n{resp.html.find("pre", first=True).element.text}\n'}]
+        return [{'data': f'\n{resp.html.find("pre", first=True).element.text}\n'}]
     return [{'code': 503}]
