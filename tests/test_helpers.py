@@ -3,8 +3,9 @@ from unittest import TestCase
 
 from requests_html import HTML, HTMLSession
 
-from codechefcli.helpers import (get_session, get_username, html_to_list, init_session_cookie,
-                                 print_table, get_csrf_token, print_response, SERVER_DOWN_MSG, UNAUTHORIZED_MSG)
+from codechefcli.helpers import (SERVER_DOWN_MSG, UNAUTHORIZED_MSG, get_csrf_token, get_session,
+                                 get_username, html_to_list, init_session_cookie, print_response,
+                                 print_table)
 from tests.utils import fake_login, fake_logout
 
 
@@ -68,9 +69,7 @@ class HelpersTestCase(TestCase):
 
     def test_print_response_503(self):
         """Should set color 'FAIL' and data when 503 code is provided"""
-        self.assertEqual(
-            print_response(code=503)[0],
-            '\x1b[91mPlease try again later. Seems like CodeChef server is down!\x1b[0m')
+        self.assertEqual(print_response(code=503)[0], f'\x1b[91m{SERVER_DOWN_MSG}\x1b[0m')
 
     def test_print_response_404_400(self):
         """Should set color 'WARNING' when code is 404 / 400"""
