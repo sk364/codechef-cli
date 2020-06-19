@@ -27,17 +27,17 @@ BCOLORS = {
 }
 
 
+def set_session_cookies(session):
+    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
+
+
 def get_session():
     session = HTMLSession()
 
     if os.path.exists(COOKIES_FILE_PATH):
-        session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
+        set_session_cookies(session)
         session.cookies.load(ignore_discard=True, ignore_expires=True)
     return session
-
-
-def set_session_cookies(session):
-    session.cookies = LWPCookieJar(filename=COOKIES_FILE_PATH)
 
 
 def init_session_cookie(name, value, **kwargs):
@@ -112,10 +112,11 @@ def print_table(data_rows, min_num_spaces=MIN_NUM_SPACES, is_pager=True):
     if is_pager:
         pager(table_str)
     print(table_str)
+    return table_str
 
 
 def style_text(text, color=None):
-    if color is None:
+    if color is None or BCOLORS.get(color) is None:
         return text
 
     return '{0}{1}{2}'.format(BCOLORS[color], text, BCOLORS['ENDC'])
@@ -123,18 +124,25 @@ def style_text(text, color=None):
 
 def print_response_util(data, extra, data_type, color, is_pager=True):
     if data is None and extra is None:
-        print(style_text('Nothing to show.', 'WARNING'))
+        no_data_msg = style_text('Nothing to show.', 'WARNING')
+        print(no_data_msg)
+        return no_data_msg, None
 
+    return_val = None
     if data is not None:
         if data_type == 'table':
-            print_table(data, is_pager=is_pager)
+            return_val = print_table(data, is_pager=is_pager)
         elif data_type == 'text':
             if is_pager:
                 pager(style_text(data, color))
-            print(style_text(data, color))
+            return_val = style_text(data, color)
+            print(return_val)
 
+    styled_extra = None
     if extra is not None:
-        print(style_text(extra, color))
+        styled_extra = style_text(extra, color)
+        print(styled_extra)
+    return return_val, styled_extra
 
 
 def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
@@ -147,9 +155,9 @@ def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
     elif code == 404 or code == 400:
         color = 'WARNING'
     elif code == 401:
-        color = 'FAIL'
         if not data:
             data = UNAUTHORIZED_MSG
+        color = 'FAIL'
 
     is_pager = False
     if not hasattr(kwargs, 'is_pager') and data_type == 'table':
@@ -157,7 +165,7 @@ def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
     else:
         is_pager = kwargs.get('is_pager', False)
 
-    print_response_util(data, extra, data_type, color, is_pager=is_pager)
+    return print_response_util(data, extra, data_type, color, is_pager=is_pager)
 
 
 def get_csrf_token(rhtml, selector):
