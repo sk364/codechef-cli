@@ -1,3 +1,5 @@
+from platform import platform
+from os import environ
 from unittest import TestCase
 
 from _pytest.monkeypatch import MonkeyPatch
@@ -11,6 +13,10 @@ from codechefcli.problems import (COMPILATION_ERROR_CLASS, INVALID_SOLUTION_ID_M
                                   get_description, get_ratings, get_solution, get_solutions,
                                   get_tags, search_problems, submit_problem)
 from tests.utils import HTML, MockHTMLResponse, fake_login
+
+temp_file_a = '/tmp/a'
+if 'Windows' in platform():
+    temp_file_a = environ['TMP'] + r'\a'
 
 
 class ProblemsTestCase(TestCase):
@@ -101,9 +107,9 @@ class ProblemsTestCase(TestCase):
             return MockHTMLResponse(status_code=500)
         self.monkeypatch.setattr(problems, "request", mock_req)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
-        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['code'], 503)
+        self.assertEqual(submit_problem("A", temp_file_a, "a")[0]['code'], 503)
 
     def test_submit_problem_invalid_status_json(self):
         """Should return 503 response when submission status request returns invalid json"""
@@ -117,9 +123,9 @@ class ProblemsTestCase(TestCase):
             ", json="{")
         self.monkeypatch.setattr(problems, "request", mock_req)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
-        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['code'], 503)
+        self.assertEqual(submit_problem("A", temp_file_a, "a")[0]['code'], 503)
 
     def test_submit_problem_compile_err(self):
         """Should return compilation error message when result code of submission is compile"""
@@ -140,10 +146,10 @@ class ProblemsTestCase(TestCase):
         self.monkeypatch.setattr(problems, "request", mock_req)
         self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
         self.assertEqual(
-            submit_problem("A", "/tmp/a", "a")[0]['data'],
+            submit_problem("A", temp_file_a, "a")[0]['data'],
             '\x1b[91mCompilation error.\nComp Err\x1b[0m')
 
     def test_submit_problem_runtime_err(self):
@@ -162,10 +168,10 @@ class ProblemsTestCase(TestCase):
         self.monkeypatch.setattr(problems, "request", mock_req)
         self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
         self.assertEqual(
-            submit_problem("A", "/tmp/a", "a")[0]['data'], '\x1b[91mRuntime error. abcd\n\x1b[0m')
+            submit_problem("A", temp_file_a, "a")[0]['data'], '\x1b[91mRuntime error. abcd\n\x1b[0m')
 
     def test_submit_problem_wrong_ans(self):
         """Should return wrong answer message when result code of submission is wrong"""
@@ -183,10 +189,10 @@ class ProblemsTestCase(TestCase):
         self.monkeypatch.setattr(problems, "request", mock_req)
         self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
         self.assertEqual(
-            submit_problem("A", "/tmp/a", "a")[0]['data'], '\x1b[91mWrong answer\n\x1b[0m')
+            submit_problem("A", temp_file_a, "a")[0]['data'], '\x1b[91mWrong answer\n\x1b[0m')
 
     def test_submit_problem_accepted_ans(self):
         """Should return accepted message when result code of submission is accepted"""
@@ -204,9 +210,9 @@ class ProblemsTestCase(TestCase):
         self.monkeypatch.setattr(problems, "request", mock_req)
         self.monkeypatch.setattr(problems, "get_status_table", mock_get_status_table)
 
-        with open('/tmp/a', 'w') as f:
+        with open(temp_file_a, 'w') as f:
             f.write('a')
-        self.assertEqual(submit_problem("A", "/tmp/a", "a")[0]['data'], 'Correct answer\n')
+        self.assertEqual(submit_problem("A", temp_file_a, "a")[0]['data'], 'Correct answer\n')
 
 
 class SearchTestCase(TestCase):
