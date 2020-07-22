@@ -4,14 +4,11 @@ from http.cookiejar import Cookie, LWPCookieJar
 from os.path import expanduser
 from pydoc import pager
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
 from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
-
-
-from bs4 import BeautifulSoup
-from bs4.element import Tag
-
 
 CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 MIN_NUM_SPACES = 3
@@ -182,17 +179,22 @@ def get_csrf_token(rhtml, selector):
 def process_body(body):
     bodysoup = BeautifulSoup(body, features="lxml")
 
-    while(len(list(bodysoup.children)) == 1):
-         bodysoup = list(bodysoup.children)[0]
+    try:
+        while(len(list(bodysoup.children)) == 1):
+            bodysoup = list(bodysoup.children)[0]
+    except AttributeError:
+        # 'NavigableString' object has no attribute 'children'
+        # last single bodysoup is a Navigable String, return it
+        return bodysoup.string
 
     processed_body = ""
     for item in bodysoup.children:
-         if isinstance(item, Tag):
-              if(item.name=="img"):
-                   processed_body+= style_text(item['src'], 'HYPERLINK')
-              else:
-                   processed_body+= item.get_text()
-         else:
-              processed_body+= item.string
+        if isinstance(item, Tag):
+            if(item.name == "img"):
+                processed_body += style_text(item['src'], 'HYPERLINK')
+            else:
+                processed_body += item.get_text()
+        else:
+            processed_body += item.string
 
     return processed_body

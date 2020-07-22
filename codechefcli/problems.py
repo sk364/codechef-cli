@@ -5,8 +5,9 @@ from requests_html import HTML
 
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
-from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID, SERVER_DOWN_MSG, get_csrf_token,
-                                 html_to_list, request, style_text, process_body)
+from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID,
+                                 SERVER_DOWN_MSG, get_csrf_token, html_to_list,
+                                 process_body, request, style_text)
 
 LANGUAGE_SELECTOR = "#language"
 INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
