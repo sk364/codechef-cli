@@ -6,7 +6,7 @@ from requests_html import HTML
 from codechefcli.auth import is_logged_in
 from codechefcli.decorators import login_required, sort_it
 from codechefcli.helpers import (BASE_URL, CSRF_TOKEN_INPUT_ID, SERVER_DOWN_MSG, get_csrf_token,
-                                 html_to_list, request, style_text)
+                                 html_to_list, request, style_text, process_body)
 
 LANGUAGE_SELECTOR = "#language"
 INVALID_PROBLEM_CODE_MSG = 'Invalid Problem Code.'
@@ -37,7 +37,7 @@ def get_description(problem_code, contest_code):
             '',
             style_text('Name: ', "BOLD") + resp_json.get('problem_name', ''),
             style_text("Description:", "BOLD"),
-            re.sub(r'(<|<\/)\w+>', '', resp_json.get("body", '')),
+            process_body(re.sub(r'(<|<\/)\w+>', '', resp_json.get("body", ''))),
             '',
             style_text("Author: ", "BOLD") + resp_json.get('problem_author', ''),
             style_text("Date Added: ", "BOLD") + resp_json.get('date_added', ''),

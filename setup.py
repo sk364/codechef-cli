@@ -18,7 +18,7 @@ setup(
     packages=["codechefcli"],
     data_files=[('codechefcli', [])],
     entry_points={"console_scripts": ['codechefcli = codechefcli.__main__:main']},
-    install_requires=['requests_html'],
+    install_requires=['requests_html','beautifulsoup4'],
     python_requires='>=3.6',
     version='0.5.3',
     url='http://www.github.com/sk364/codechef-cli',

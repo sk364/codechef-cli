@@ -8,6 +8,11 @@ from requests import ReadTimeout
 from requests.exceptions import ConnectionError
 from requests_html import HTMLSession
 
+
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+
+
 CSRF_TOKEN_INPUT_ID = 'edit-csrfToken'
 MIN_NUM_SPACES = 3
 BASE_URL = 'https://www.codechef.com'
@@ -23,7 +28,8 @@ BCOLORS = {
     'FAIL': '\033[91m',
     'ENDC': '\033[0m',
     'BOLD': '\033[1m',
-    'UNDERLINE': '\033[4m'
+    'UNDERLINE': '\033[4m',
+    'HYPERLINK': '\033[4;94m'
 }
 
 
@@ -171,3 +177,22 @@ def print_response(data_type='text', code=200, data=None, extra=None, **kwargs):
 def get_csrf_token(rhtml, selector):
     token = rhtml.find(f"#{selector}", first=True)
     return token and hasattr(token.element, 'value') and token.element.value
+
+
+def process_body(body):
+    bodysoup = BeautifulSoup(body, features="lxml")
+
+    while(len(list(bodysoup.children)) == 1):
+         bodysoup = list(bodysoup.children)[0]
+
+    processed_body = ""
+    for item in bodysoup.children:
+         if isinstance(item, Tag):
+              if(item.name=="img"):
+                   processed_body+= style_text(item['src'], 'HYPERLINK')
+              else:
+                   processed_body+= item.get_text()
+         else:
+              processed_body+= item.string
+
+    return processed_body
