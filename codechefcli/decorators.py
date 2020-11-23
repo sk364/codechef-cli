@@ -6,6 +6,11 @@ from codechefcli.helpers import COOKIES_FILE_PATH
 
 
 def login_required(func):
+    """Checks whether a user is logged on.
+
+    Analyzes the cookies to check if a user was logged in from this device.
+    This check is necessary before operations like logout and submit problems.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         is_logged_in = False
