@@ -19,15 +19,25 @@ LOGOUT_SUCCESS_MSG = 'Successfully logged out!'
 
 
 def is_logged_in(resp):
+    """Checks if the user is logged in or not"""
     return not bool(resp.html.find(LOGIN_FORM_ID))
 
 
 def get_form_url(rhtml):
+    """Returns the url for the session limit page"""
     form = rhtml.find(SESSION_LIMIT_FORM_ID, first=True)
     return form and form.element.action
 
 
 def get_other_active_sessions(rhtml):
+    """Returns other active sessions of user other than the current one
+
+    Args:
+      rhtml: html string from where active session info is to be extracted.
+
+    Returns:
+      dictionary containing information about other active sessions
+    """
     form = rhtml.find(SESSION_LIMIT_FORM_ID, first=True)
     inputs = form.find('input')
     inputs = inputs[:-5] + inputs[-4:]
@@ -35,6 +45,21 @@ def get_other_active_sessions(rhtml):
 
 
 def disconnect_active_sessions(session, login_resp_html):
+    """Disconnects the users all active sessions other than the current session.
+
+    Args:
+      session:
+        An HTMLSession object representing the current session of user
+      login_resp_html:
+        HTML response from where user has to disconnect active sessions
+
+    Returns:
+      [{'data': 'Successfully logged in!'}] if previous sessions were closed and
+      user was Successfully logged in.
+      ['code': 503] otherwise indicating that the service was not available.
+      Possible causes could be that the server was not ready, or is down for
+      maintanance or was overloaded
+    """
     token = get_csrf_token(login_resp_html, CSRF_TOKEN_INPUT_ID)
     post_url = get_form_url(login_resp_html)
     other_active_sessions = get_other_active_sessions(login_resp_html)
@@ -47,12 +72,44 @@ def disconnect_active_sessions(session, login_resp_html):
 
 
 def save_session_cookies(session, username):
+    """Saves cookies for current user session
+
+    Args:
+      session:
+        An HTMLSession object representing the current session of user
+      username:
+        username for CodeChef account
+    """
     session.cookies.set_cookie(init_session_cookie("username", username))
     session.cookies.clear('www.codechef.com', '/', 'login_logout')
     session.cookies.save(ignore_expires=True, ignore_discard=True)
 
 
 def make_login_req(username, password, disconnect_sessions):
+    """Makes a request to the codeChef site to log into your account.
+
+    This method uses the username and password supplied to it to login to CodeChef.
+    If multiple sessions are open on other devices with the same credentials,
+    it closes these sessions based on the disconnect_sessions parameter.
+
+    Args:
+      username:
+        string containing the username for CodeChef account
+      password:
+        string containing the password for CodeChef account
+      disconnect_sessions:
+        boolean value indicating whether user wants to disconnect other open
+        sessions or log out from current session
+
+    Returns:
+      List of dictionaries containing a message whether the operation was
+      successful or any errors that occurred, and the http response code for
+      the operation.
+
+      [{"data": "\nBye."}]
+      [{'data': 'Username/Password field cannot be left blank.', 'code': 400}]
+
+    """
     with HTMLSession() as session:
         set_session_cookies(session)
 
@@ -88,6 +145,31 @@ def make_login_req(username, password, disconnect_sessions):
 
 
 def login(username=None, password=None, disconnect_sessions=False):
+    """Logs in to the users CodeChef account.
+
+    Uses the optional username and password paramters to log into the users
+    account. If no paramters are passed, prompts the user to input them.
+
+    Args:
+      username:
+        Username for CodeChef account. If no value is passed, it prompts the
+        user to enter it.
+      password:
+        password for CodeChef account. If no value is passed, it prompts the
+        user to enter it.
+      disconnect_sessions:
+        True or False value depending on whether user wants to disconnect from
+        their previous sessions from other devices.
+
+    Returns:
+      List of dictionaries containing a message whether the operation was
+      successful or any errors that occurred, and the http response code for
+      the operation.
+
+      [{"data": "\nBye."}]
+      [{'data': 'Username/Password field cannot be left blank.', 'code': 400}]
+
+    """
     if username is None:
         username = input('Username: ')
     if password is None:
@@ -100,6 +182,20 @@ def login(username=None, password=None, disconnect_sessions=False):
 
 @login_required
 def logout(session=None):
+    """Logs the user out of the current session.
+
+    It first checks if the user has logged into his account, by consulting the
+    cookies. Then logs out the user.
+
+    Args:
+      session: HTMLSession object for the current session
+
+    Returns:
+      [{'data': 'Successfully logged out!'}] if user was successfull logged out
+      ['code': 503] otherwise indicating that the service was not available.
+      Possible causes could be that the server was not ready, or is down for
+      maintanance or was overloaded
+    """
     resp = request(session=session, url='/logout')
     if resp.status_code == 200:
         if os.path.exists(COOKIES_FILE_PATH):
