@@ -19,6 +19,14 @@ DEFAULT_NUM_LINES = 20
 
 
 def create_parser():
+    """Creates a parser to read command line arguments
+
+    Args: None
+
+    Returns:
+      An ArgumentParser object with arguments like login, logout, user, etc.
+      passed by the user.
+    """
     parser = argparse.ArgumentParser()
 
     # auth
@@ -91,6 +99,26 @@ def create_parser():
 
 
 def main(argv=None):
+    """main method that is called every time the cli runs
+
+    This method gets the arguments from the user, processes it, and performs the
+    corressponding operations.
+
+    Args:
+      argv:
+        The list of command line arguments passed to this script
+
+    Returns:
+      A list of dictionaries containing a message and the https response code
+      recieved after performing the operation given by the user
+
+      [{"data": "\nBye."}]
+      [{'data': 'Username/Password field cannot be left blank.', 'code': 400}]
+
+    Raises:
+      KeyboardInterrupt: Raises exception if user tries to stop a running
+        program by pressing ctrl + c
+    """
     if argv is None:
         argv = sys.argv
 
