@@ -33,35 +33,28 @@ def get_description(problem_code, contest_code):
         return [{'code': 503}]
 
     if resp_json["status"] == "success":
-        problem = [
-            '',
-            style_text('Name: ', "BOLD") + resp_json.get('problem_name', ''),
-            style_text("Description:", "BOLD"),
-            re.sub(r'(<|<\/)\w+>', '', resp_json.get("body", '')),
-            '',
-            style_text("Author: ", "BOLD") + resp_json.get('problem_author', ''),
-            style_text("Date Added: ", "BOLD") + resp_json.get('date_added', ''),
-            style_text("Max Time Limit: ", "BOLD") + f"{resp_json.get('max_timelimit', '')} secs",
-            style_text("Source Limit: ", "BOLD") + f"{resp_json.get('source_sizelimit', '')} Bytes",
-            style_text("Languages: ", "BOLD") + resp_json.get('languages_supported', ''),
-            ''
-        ]
+        problem = {
+            'Name: ': resp_json.get('problem_name', ''),
+            "Author: " : resp_json.get('problem_author', ''),
+            "Date Added: " : resp_json.get('date_added', ''),
+            "Max Time Limit: ": f"{resp_json.get('max_timelimit', '')} secs",
+            "Source Limit: " : f"{resp_json.get('source_sizelimit', '')} Bytes",
+            "Languages: " : resp_json.get('languages_supported', ''),
+            "Description: ":  resp_json.get("body", ''), #re.sub(r'(<|<\/)\w+>', '',
+        }
         if resp_json.get('tags'):
-            problem.append(
-                style_text('Tags: ', 'BOLD') +
-                " ".join([tag.text for tag in HTML(html=resp_json['tags']).find('a')])
-            )
-            problem.append('')
+            problem['Tags: ']= " ".join([tag.text for tag in HTML(html=resp_json['tags']).find('a')])
+        
         if resp_json.get('editorial_url'):
-            problem.append(style_text('Editorial: ', 'BOLD') + resp_json['editorial_url'])
-            problem.append('')
+            problem['Editorial: '] = resp_json['editorial_url']
 
-        return [{"data": "\n".join(problem)}]
+        return problem
     elif resp_json["status"] == "error":
-        return [{
-            'data': 'Problem not found. Use `--search` to search in a specific contest',
-            'code': 404
-        }]
+        problem= {
+            'data: ': 'Problem not found. Use `--search` to search in a specific contest',
+            'code: ': 404
+        }
+        return problem
     return [{'code': 503}]
 
 
