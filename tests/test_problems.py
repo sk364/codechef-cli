@@ -1,5 +1,5 @@
-from platform import platform
 from os import environ
+from platform import platform
 from unittest import TestCase
 
 from _pytest.monkeypatch import MonkeyPatch
@@ -171,7 +171,8 @@ class ProblemsTestCase(TestCase):
         with open(temp_file_a, 'w') as f:
             f.write('a')
         self.assertEqual(
-            submit_problem("A", temp_file_a, "a")[0]['data'], '\x1b[91mRuntime error. abcd\n\x1b[0m')
+            submit_problem(
+                "A", temp_file_a, "a")[0]['data'], '\x1b[91mRuntime error. abcd\n\x1b[0m')
 
     def test_submit_problem_wrong_ans(self):
         """Should return wrong answer message when result code of submission is wrong"""
