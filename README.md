@@ -1,4 +1,7 @@
 # CodeChef CLI [![PyPI version](https://badge.fury.io/py/codechefcli.svg)](https://badge.fury.io/py/codechefcli) [![Build Status](https://travis-ci.org/sk364/codechef-cli.svg?branch=master)](https://travis-ci.org/sk364/codechef-cli)
+Hello There!
+Getting Bore with old Submitting Method
+Here is Something new You should try!!!
 
 A command-line tool for querying and submitting problems on [CodeChef](https://www.codechef.com/).
 
