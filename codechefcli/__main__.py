@@ -1,9 +1,15 @@
 import argparse
 import sys
+import bs4
+from bs4 import BeautifulSoup
+
+from rich.console import Console
+from rich.style import Style
+from rich.theme import Theme
 
 from codechefcli.auth import login, logout
 from codechefcli.helpers import print_response
-from codechefcli.problems import (RESULT_CODES, get_contest_problems, get_contests, get_description,
+from problems import (RESULT_CODES, get_contest_problems, get_contests, get_description,
                                   get_ratings, get_solution, get_solutions, get_tags,
                                   search_problems, submit_problem)
 from codechefcli.teams import get_team
@@ -17,6 +23,9 @@ INVALID_USERNAME = '##no_login##'
 DEFAULT_PAGE = 1
 DEFAULT_NUM_LINES = 20
 
+#defining custom themes 
+themes = Theme({"data":"bold #a1065b","error":"bold red"})
+c = Console(theme=themes)
 
 def create_parser():
     parser = argparse.ArgumentParser()
@@ -132,14 +141,47 @@ def main(argv=None):
 
         resps = []
 
+        # function stylize to style the output
+        def stylize(resps) :
+            theme='data'
+            if resps.get('code: ')== 404 :
+                theme='error' 
+            
+            remain=[]
+            print()
+            for ele in resps.keys() :
+                if len(ele) > 30 or len(str(resps[ele])) > 30 :
+                    remain.append(ele)
+                else :
+                    c.print(ele.upper(),end="",style=theme)
+                    c.print(resps[ele],end="")
+                    print(" "*10,end="")
+            print()
+            print()
+            for ele in remain :
+                c.print(ele.upper(),end="",style=theme)
+                result=resps[ele]
+                if ele=="Description: ":
+                    result = BeautifulSoup(result,"html.parser")
+                    im_urls = result.find_all('img')
+                    c.print(result.text)
+                    for url in im_urls :
+                        c.print("image: "+url['src'])
+                    continue
+                c.print(result)
+                print()
+            return
+
         if username != INVALID_USERNAME:
             resps = login(username=username, disconnect_sessions=disconnect_sessions)
 
         elif is_logout:
             resps = logout()
 
-        elif problem_code:
-            resps = get_description(problem_code, contest or CC_PRACTICE)
+        if problem_code: 
+            resps = get_description(problem_code, contest or CC_PRACTICE) 
+            stylize(resps)
+            return
 
         elif submit:
             resps = submit_problem(*submit)
@@ -179,6 +221,7 @@ def main(argv=None):
 
         for resp in resps:
             print_response(**resp)
+            
         return resps
     except KeyboardInterrupt:
         print('\nBye.')
